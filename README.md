@@ -34,7 +34,7 @@ Backend:
 - `DEVSTATE_EGRESS_PROXY_URL` for production hosting checks
 - `DEVSTATE_SNAPSHOT_BUCKET`, optional `DEVSTATE_SNAPSHOT_REGION` and `DEVSTATE_SNAPSHOT_ENDPOINT` for private S3-compatible snapshots
 - `DEVSTATE_NTFY_SERVER`, `DEVSTATE_NTFY_TOPIC_PREFIX`, `DEVSTATE_NTFY_TOPIC_SECRET`, optional `DEVSTATE_NTFY_TOKEN`
-- `API_ANON_RATE`, `API_USER_RATE`, `API_PROJECT_SCAN_RATE`, `API_SNAPSHOT_RATE`, `API_NOTIFICATION_RATE`, `API_INFRASTRUCTURE_CHECK_RATE`
+- `API_ANON_RATE`, `API_USER_RATE`, `API_PROJECT_SCAN_RATE`, `API_SNAPSHOT_RATE`, `API_NOTIFICATION_RATE`, `API_INFRASTRUCTURE_CHECK_RATE`\n- Optional error tracking: `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_ENVIRONMENT`
 
 See `frontend/.env.example` and `backend/.env.example`. Never commit `.env`, `.env.local`, credentials or production secrets.
 
@@ -111,7 +111,7 @@ GitHub Actions runs Django checks, migration drift checks, migrations and backen
 
 Domain assets, DNS state, hosting services, AI subscriptions, renewal summaries and the `check_renewals` management command from `feature/infrastructure-subscriptions` are preserved and user-scoped. See `docs/INFRASTRUCTURE-SUBSCRIPTIONS.md`.
 
-## Operational limitations
+See `docs/OPERATIONS.md` for release, PostgreSQL backup, restore-drill, scheduler and incident-response procedures.\n\n## Operational limitations
 
 - Hosting checks establish HTTP reachability, not provider billing or deployment health.
 - DNS monitoring currently checks IPv4 A records only; MX, TXT, CNAME, NS and DNSSEC are not implemented.
