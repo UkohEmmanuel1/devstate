@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { UserButton } from "@clerk/nextjs";
-import { Activity, Bell, BellRing, Check, CircleAlert, Code2, Command, GitBranch, Github, LayoutDashboard, Moon, Play, RefreshCw, Search, ShieldCheck, Smartphone, Square, X } from "lucide-react";
+import { Activity, Bell, BellRing, Check, CircleAlert, Code2, Command, GitBranch, Github, LayoutDashboard, Moon, Play, RefreshCw, Search, ShieldCheck, Smartphone, Square, Terminal, X } from "lucide-react";
 
 const API = "/api/backend";
 type Project = {id:number;name:string;path:string;branch:string|null;dirty_paths:string[];commit:string|null};
