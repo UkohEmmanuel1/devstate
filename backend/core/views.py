@@ -1,4 +1,5 @@
-import hashlib,hmac,json,os,socket,subprocess
+import hashlib,hmac,ipaddress,json,os,socket,subprocess
+from urllib.parse import urlsplit
 from pathlib import Path
 from datetime import timedelta
 import httpx
@@ -10,6 +11,18 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .models import Project,DevEvent,FocusSession,DomainAsset,HostingService,AISubscription
 from .serializers import ProjectSerializer,EventSerializer,FocusSerializer,DomainAssetSerializer,HostingServiceSerializer,AISubscriptionSerializer
+
+def is_public_http_target(url):
+    try:
+        parsed=urlsplit(url)
+        if parsed.scheme not in ("http","https") or not parsed.hostname or parsed.username or parsed.password:
+            return False
+        port=parsed.port or (443 if parsed.scheme=="https" else 80)
+        records=socket.getaddrinfo(parsed.hostname,port,type=socket.SOCK_STREAM)
+        addresses={ipaddress.ip_address(record[4][0]) for record in records}
+        return bool(addresses) and all(address.is_global for address in addresses)
+    except (ValueError,OSError):
+        return False
 
 def user_topic(user):
     if not settings.NTFY_TOPIC_PREFIX or not settings.NTFY_TOPIC_SECRET:return ""
@@ -97,8 +110,9 @@ class HostingServiceViewSet(OwnedViewSet):
     def check(self,request,pk=None):
         item=self.get_object()
         if not item.service_url:return Response({"detail":"Add a service URL before checking uptime."},status=400)
+        if not is_public_http_target(item.service_url):return Response({"detail":"Only public HTTP(S) targets are allowed for server-side checks."},status=400)
         try:
-            response=httpx.get(item.service_url,timeout=10,follow_redirects=True);item.last_http_status=response.status_code;item.status="active" if response.status_code<500 else "paused"
+            response=httpx.get(item.service_url,timeout=10,follow_redirects=False);item.last_http_status=response.status_code;item.status="active" if response.status_code<500 else "paused"
         except httpx.HTTPError:item.last_http_status=None;item.status="paused"
         item.last_checked_at=timezone.now();item.save(update_fields=["last_http_status","status","last_checked_at"]);return Response(HostingServiceSerializer(item).data)
 class AISubscriptionViewSet(OwnedViewSet):
@@ -122,8 +136,10 @@ def check_infrastructure(request):
         except socket.gaierror:item.observed_dns={"error":"DNS lookup failed"};item.dns_status="failed"
         item.last_dns_check=timezone.now();item.save(update_fields=["observed_dns","dns_status","last_dns_check"]);domains.append({"domain":item.domain_name,"status":item.dns_status,"observed":item.observed_dns})
     for item in HostingService.objects.filter(owner=request.user).exclude(service_url=""):
+        if not is_public_http_target(item.service_url):
+            item.last_http_status=None;item.status="paused";item.last_checked_at=timezone.now();item.save(update_fields=["last_http_status","status","last_checked_at"]);hosts.append({"name":item.name,"status":item.status,"http_status":None,"error":"Blocked non-public HTTP target"});continue
         try:
-            response=httpx.get(item.service_url,timeout=10,follow_redirects=True);item.last_http_status=response.status_code;item.status="active" if response.status_code<500 else "paused"
+            response=httpx.get(item.service_url,timeout=10,follow_redirects=False);item.last_http_status=response.status_code;item.status="active" if response.status_code<500 else "paused"
         except httpx.HTTPError:item.last_http_status=None;item.status="paused"
         item.last_checked_at=timezone.now();item.save(update_fields=["last_http_status","status","last_checked_at"]);hosts.append({"name":item.name,"status":item.status,"http_status":item.last_http_status})
     return Response({"domains":domains,"hosting":hosts,"checked_at":timezone.now()})
