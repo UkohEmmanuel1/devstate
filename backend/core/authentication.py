@@ -24,7 +24,7 @@ class ClerkJWTAuthentication(BaseAuthentication):
             audience = settings.CLERK_AUDIENCE
             claims = jwt.decode(parts[1], key, algorithms=["RS256"], issuer=settings.CLERK_ISSUER,
                 audience=audience or None, options={"verify_aud": bool(audience), "require": ["exp", "iat", "sub"]}, leeway=30)
-            if settings.CLERK_AUTHORIZED_PARTIES and claims.get("azp") not in settings.CLERK_AUTHORIZED_PARTIES:
+            if settings.CLERK_AUTHORIZED_PARTIES and claims.get("azp") and claims["azp"] not in settings.CLERK_AUTHORIZED_PARTIES:
                 raise AuthenticationFailed("Untrusted token origin.")
             subject = claims["sub"]
         except AuthenticationFailed:
