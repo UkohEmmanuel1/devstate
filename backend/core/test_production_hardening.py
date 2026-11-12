@@ -168,3 +168,27 @@ class ReadinessEndpointTests(TestCase):
         response = APIClient().get("/api/health/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["database"], "ok")
+
+    @override_settings(DEBUG=False)
+    def test_git_worktree_pointer_cannot_escape_account_root(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary) / "accounts"
+            repo_path = base / "42" / "repos" / "untrusted"
+            repo_path.mkdir(parents=True)
+            outside_git = Path(temporary) / "other-account" / ".git"
+            outside_git.mkdir(parents=True)
+            (repo_path / ".git").write_text(
+                f"gitdir: {outside_git}", encoding="utf-8"
+            )
+            user = get_user_model().objects.create_user(username="scanner-owner")
+            user.pk = 42
+            client = APIClient()
+            client.force_authenticate(user)
+            with patch.dict(
+                os.environ,
+                {"DEVSTATE_PROJECTS_DIRS": str(base) + "/{user_id}/repos"},
+            ):
+                response = client.post("/api/projects/scan/", {}, format="json")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["scanned"], 0)
+            self.assertFalse(Project.objects.exists())
