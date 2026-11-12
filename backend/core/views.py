@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 
 import httpx
 from django.conf import settings
+from django.db import DatabaseError, connection
 from django.contrib.auth import get_user_model
 from django.core.exceptions import SuspiciousFileOperation
 from django.db import transaction
@@ -123,7 +124,13 @@ def notify(user, title, message, priority=3):
 @authentication_classes([])
 @permission_classes([AllowAny])
 def health(request):
-    return Response({"status": "ok"})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except DatabaseError:
+        return Response({"status": "unavailable"}, status=503)
+    return Response({"status": "ok", "database": "ok"})
 
 
 @api_view(["GET"])
