@@ -157,11 +157,20 @@ if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
 
+    def scrub_sentry_event(event, hint):
+        request = event.get("request", {})
+        headers = request.get("headers", {})
+        for header in list(headers):
+            if header.lower() in {"authorization", "cookie", "set-cookie", "x-api-key"}:
+                headers[header] = "[Filtered]"
+        request.pop("data", None)
+        return event
+
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
         traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.05")),
-        send_default_pii=False,
+        send_default_pii=False,\n        before_send=scrub_sentry_event,
         environment=os.getenv(
             "SENTRY_ENVIRONMENT", "development" if DEBUG else "production"
         ),
