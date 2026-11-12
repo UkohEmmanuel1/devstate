@@ -143,3 +143,20 @@ DEVSTATE_EGRESS_PROXY_URL = os.getenv("DEVSTATE_EGRESS_PROXY_URL", "")
 DEVSTATE_SNAPSHOT_BUCKET = os.getenv("DEVSTATE_SNAPSHOT_BUCKET", "")
 DEVSTATE_SNAPSHOT_REGION = os.getenv("DEVSTATE_SNAPSHOT_REGION", "")
 DEVSTATE_SNAPSHOT_ENDPOINT = os.getenv("DEVSTATE_SNAPSHOT_ENDPOINT", "")
+
+
+# Optional server-side error tracking. Never enable PII capture by default.
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.05")),
+        send_default_pii=False,
+        environment=os.getenv(
+            "SENTRY_ENVIRONMENT", "development" if DEBUG else "production"
+        ),
+    )
