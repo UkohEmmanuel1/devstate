@@ -260,6 +260,7 @@ class ClerkTenantIsolationTests(ClerkJWTAuthenticationTests):
         token = self.authenticate_a()
         headers = {"HTTP_AUTHORIZATION": f"Bearer {token}"}
         for url in [f"/api/projects/{self.project_b.pk}/", f"/api/events/{self.event_b.pk}/"]:
-            with self.subTest(url=url):
-                response = self.client.get(url, **headers)
-                self.assertIn(response.status_code, (404, 405))
+            for method in ("get", "patch", "delete"):
+                with self.subTest(url=url, method=method):
+                    response = getattr(self.client, method)(url, {"title": "attempted takeover"}, format="json", **headers) if method == "patch" else getattr(self.client, method)(url, **headers)
+                    self.assertIn(response.status_code, (404, 405))
