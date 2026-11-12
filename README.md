@@ -95,7 +95,7 @@ Django verifies Clerk RS256 JWT signatures against cached JWKS and validates iss
 
 Next.js obtains the Clerk token server-side and forwards it through a same-origin proxy. The browser does not receive the Django bearer token or Clerk secret key. Production CORS/CSRF origins must be explicit allowlists. Secure cookies, HTTPS redirects, HSTS and proxy SSL handling are enabled in production configuration. API throttles apply globally and more tightly to repository scans, snapshots, notifications and infrastructure checks.
 
-Repository scanning is limited to configured per-account roots and rejects symlinked account roots and repository paths that escape the account directory. Production hosting checks are disabled unless a controlled egress proxy is configured; the proxy must independently enforce connection-time destination validation. S3 snapshot objects are stored under per-user prefixes with server-side encryption and must remain private.
+Repository scanning is enabled only in local DEBUG mode. It rejects symlinked roots, paths outside the configured root and Git worktree metadata pointing outside that root. Production server-side scanning is disabled until a separately authenticated desktop agent is available. Production hosting checks are disabled unless a controlled egress proxy is configured; the proxy must independently enforce connection-time destination validation. S3 snapshot objects are stored under per-user prefixes with server-side encryption and must remain private.
 
 Per-account ntfy topics are HMAC-derived. Public ntfy topics act as bearer capabilities: do not disclose topic names or send credentials, tokens, private source code or other sensitive data in notification messages.
 
