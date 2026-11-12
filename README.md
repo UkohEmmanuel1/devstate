@@ -5,13 +5,13 @@ DevState is an authenticated, cloud-ready and self-hostable engineering workspac
 ## Architecture
 
 - `frontend/`: Next.js App Router, Clerk and a same-origin authenticated API proxy.
-- `backend/`: Django, DRF, Clerk JWT/JWKS verification, owner-scoped models, rate limits and ntfy notifications.
+- `backend/`: Django, DRF, Clerk JWT/JWKS verification, owner-scoped models, rate limits and ntfy notifications.\n- `src/devstate/`: legacy standalone Python event router/SQLite package; it is not the Django web runtime or system of record.
 - PostgreSQL via `DATABASE_URL` in production; SQLite is supported for local development.
 - S3-compatible private object storage is required for production recovery snapshots.
 - Production hosting checks require a controlled outbound egress proxy. The proxy must enforce destination-IP policy at connection time.
 - Ownership is derived from the verified Clerk subject, never from request parameters or payloads.
 
-## Clerk setup
+See `docs/ARCHITECTURE.md` for component responsibilities, request flow, trust boundaries and the legacy package boundary.\n\n## Clerk setup
 
 1. Create a Clerk application and configure sign-in and sign-up routes as `/sign-in` and `/sign-up`.
 2. Put the publishable key and server-only secret key in `frontend/.env.local`. Never expose `CLERK_SECRET_KEY` to browser code.
