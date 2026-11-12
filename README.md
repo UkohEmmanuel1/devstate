@@ -24,7 +24,7 @@ py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 Copy-Item .env.example .env
-# Set real Clerk issuer/JWKS values and a strong DJANGO_SECRET_KEY.
+# Set DJANGO_DEBUG=true, real Clerk issuer/JWKS values and a strong DJANGO_SECRET_KEY.
 python manage.py migrate
 python manage.py runserver 127.0.0.1:8000
 ```
