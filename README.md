@@ -72,8 +72,6 @@ Visit `http://localhost:3000`. The landing page is public; dashboard and app rou
 A local Compose stack is provided for the frontend, Django API and PostgreSQL. Create `backend/.env` and `frontend/.env.local` from their examples. Copy `compose.env.example` to a root `.env`, replace both placeholders, and keep the generated `.env` untracked. Configure real Clerk development values in the two service env files.
 
 ```powershell
-$env:POSTGRES_PASSWORD = "replace-with-a-local-database-password"
-$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_your_clerk_publishable_key"
 docker compose up --build -d
 docker compose exec api python manage.py migrate
 ```
