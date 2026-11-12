@@ -320,6 +320,14 @@ def scan_projects(request):
                 git_dir = path / ".git"
                 if not git_dir.exists() or git_dir.is_symlink():
                     continue
+                if git_dir.is_file():
+                    pointer = git_dir.read_text(encoding="utf-8")[:1024].strip()
+                    if not pointer.startswith("gitdir:"):
+                        continue
+                    linked_git_dir = (path / pointer.split(":", 1)[1].strip()).resolve(strict=True)
+                    linked_git_dir.relative_to(root)
+                elif not git_dir.is_dir():
+                    continue
                 dirty = _git_output(path, "status", "--porcelain")
                 obj, _ = Project.objects.update_or_create(
                     owner=request.user,
