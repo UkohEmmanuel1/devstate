@@ -284,7 +284,7 @@ def _git_output(repo_path, *args):
         "GIT_TERMINAL_PROMPT": "0",
     })
     result = subprocess.run(
-        ["git", *args],
+        ["git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null", "-c", "core.pager=cat", *args],
         cwd=str(repo_path),
         env=env,
         text=True,
@@ -299,6 +299,16 @@ def _git_output(repo_path, *args):
 @api_view(["POST"])
 @throttle_classes([ProjectScanRateThrottle])
 def scan_projects(request):
+    if not settings.DEBUG:
+        return Response(
+            {
+                "detail": (
+                    "Server-side repository scanning is disabled in production. "
+                    "Use the authenticated DevState Desktop Agent when available."
+                )
+            },
+            status=409,
+        )
     roots = _scan_roots_for_user(request.user)
     found = []
     for root in roots:
