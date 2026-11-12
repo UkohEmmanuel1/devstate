@@ -1,4 +1,9 @@
 .env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 .venv/
 __pycache__/
 .pytest_cache/
@@ -8,3 +13,6 @@ data/
 dist/
 build/
 *.egg-info/
+node_modules/
+.next/
+*.pem
