@@ -147,3 +147,17 @@ class RenewalIdempotencyTests(TestCase):
             DevEvent.objects.filter(owner=user, source="renewal-monitor").count(), 1
         )
         notify_mock.assert_called_once()
+
+    @override_settings(DEBUG=False)
+    def test_user_root_symlink_to_another_account_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary) / "accounts"
+            other_root = base / "7" / "repos"
+            other_root.mkdir(parents=True)
+            (base / "42").symlink_to(base / "7", target_is_directory=True)
+            with patch.dict(
+                os.environ,
+                {"DEVSTATE_PROJECTS_DIRS": str(base) + "/{user_id}/repos"},
+            ):
+                user = type("User", (), {"pk": 42})()
+                self.assertEqual(_scan_roots_for_user(user), [])
