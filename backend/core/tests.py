@@ -1,15 +1,14 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 import jwt
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework.test import APITestCase
 from core.models import ClerkProfile, Project, DevEvent, FocusSession, DomainAsset, HostingService, AISubscription
 
 class ClerkAuthenticationTests(APITestCase):
-    def setUp(self):
-        self.url = "/api/projects/"
-
     def test_missing_token_is_401(self):
-        response = self.client.get(self.url)
+        response = self.client.get("/api/projects/")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response["WWW-Authenticate"], "Bearer")
 
@@ -17,15 +16,15 @@ class ClerkAuthenticationTests(APITestCase):
     def test_invalid_token_is_401(self, client_factory):
         client_factory.return_value.get_signing_key_from_jwt.return_value = Mock(key="public-key")
         with patch("core.authentication.jwt.decode", side_effect=jwt.InvalidTokenError("bad signature")):
-            response = self.client.get(self.url, HTTP_AUTHORIZATION="Bearer invalid")
+            response = self.client.get("/api/projects/", HTTP_AUTHORIZATION="Bearer invalid")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response["WWW-Authenticate"], "Bearer")
 
     @patch("core.authentication._client")
     def test_valid_token_creates_local_user(self, client_factory):
         client_factory.return_value.get_signing_key_from_jwt.return_value = Mock(key="public-key")
-        with patch("core.authentication.jwt.decode", return_value={"sub":"user_clerk_test", "iss":"https://issuer/", "exp":9999999999}):
-            response = self.client.get(self.url, HTTP_AUTHORIZATION="Bearer valid")
+        with patch("core.authentication.jwt.decode", return_value={"sub": "user_clerk_test", "iss": "https://issuer/", "exp": 9999999999}):
+            response = self.client.get("/api/projects/", HTTP_AUTHORIZATION="Bearer valid")
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ClerkProfile.objects.filter(clerk_user_id="user_clerk_test").exists())
 
@@ -38,7 +37,8 @@ class OwnershipIsolationTests(APITestCase):
         ClerkProfile.objects.create(user=self.user_b, clerk_user_id="clerk_b")
         Project.objects.create(owner=self.user_b, name="private", path="/private")
         DevEvent.objects.create(owner=self.user_b, source="test", title="private event")
-        FocusSession.objects.create(owner=self.user_b, started_at="2026-01-01T00:00:00Z", ends_at="2026-01-01T01:00:00Z")
+        now = timezone.now()
+        FocusSession.objects.create(owner=self.user_b, started_at=now, ends_at=now + timedelta(hours=1))
         self.domain = DomainAsset.objects.create(owner=self.user_b, domain_name="private.example")
         self.host = HostingService.objects.create(owner=self.user_b, name="private host")
         self.subscription = AISubscription.objects.create(owner=self.user_b, provider="private AI")
