@@ -4,7 +4,7 @@ DevState is an authenticated, cloud-ready and self-hostable engineering workspac
 
 ## Architecture
 
-- `frontend/`: Next.js App Router, Clerk and a same-origin authenticated API proxy.
+- `frontend/`: Next.js 16 App Router, Clerk 7 and a same-origin authenticated API proxy using the Next.js `proxy.ts` convention.
 - `backend/`: Django, DRF, Clerk JWT/JWKS verification, owner-scoped models, rate limits and ntfy notifications.
 - `src/devstate/`: legacy standalone Python event router/SQLite package; it is not the Django web runtime or system of record.
 - PostgreSQL via `DATABASE_URL` in production; SQLite is supported for local development.
@@ -69,11 +69,9 @@ Visit `http://localhost:3000`. The landing page is public; dashboard and app rou
 
 ## Docker Compose
 
-A local Compose stack is provided for the frontend, Django API and PostgreSQL. Create `backend/.env` and `frontend/.env.local` from their examples. Create a root `.env` containing `POSTGRES_PASSWORD` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`; keep it untracked. Configure real Clerk development values in the two service env files.
+A local Compose stack is provided for the frontend, Django API and PostgreSQL. Create `backend/.env` and `frontend/.env.local` from their examples. Copy `compose.env.example` to a root `.env`, replace both placeholders, and keep the generated `.env` untracked. Configure real Clerk development values in the two service env files.
 
 ```powershell
-$env:POSTGRES_PASSWORD = "replace-with-a-local-database-password"
-$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_your_clerk_publishable_key"
 docker compose up --build -d
 docker compose exec api python manage.py migrate
 ```
@@ -97,7 +95,7 @@ Django verifies Clerk RS256 JWT signatures against cached JWKS and validates iss
 
 Next.js obtains the Clerk token server-side and forwards it through a same-origin proxy. The browser does not receive the Django bearer token or Clerk secret key. Production CORS/CSRF origins must be explicit allowlists. Secure cookies, HTTPS redirects, HSTS and proxy SSL handling are enabled in production configuration. API throttles apply globally and more tightly to repository scans, snapshots, notifications and infrastructure checks.
 
-Repository scanning is limited to configured per-account roots and rejects symlinked account roots and repository paths that escape the account directory. Production hosting checks are disabled unless a controlled egress proxy is configured; the proxy must independently enforce connection-time destination validation. S3 snapshot objects are stored under per-user prefixes with server-side encryption and must remain private.
+Repository scanning is enabled only in local DEBUG mode. It rejects symlinked roots, paths outside the configured root and Git worktree metadata pointing outside that root. Production server-side scanning is disabled until a separately authenticated desktop agent is available. Production hosting checks are disabled unless a controlled egress proxy is configured; the proxy must independently enforce connection-time destination validation. S3 snapshot objects are stored under per-user prefixes with server-side encryption and must remain private.
 
 Per-account ntfy topics are HMAC-derived. Public ntfy topics act as bearer capabilities: do not disclose topic names or send credentials, tokens, private source code or other sensitive data in notification messages.
 
@@ -123,5 +121,5 @@ See `docs/OPERATIONS.md` for release, PostgreSQL backup, restore-drill, schedule
 - DNS monitoring currently checks IPv4 A records only; MX, TXT, CNAME, NS and DNSSEC are not implemented.
 - Renewal dates are user-managed; automatic registrar/RDAP and provider billing integrations are not implemented.
 - Renewal notification delivery is at-least-once across process crashes: a crash after ntfy accepts a message but before the ledger is marked sent can cause a retry.
-- The server-side repository scanner can inspect only filesystems mounted into the backend. Monitoring a customer's laptop requires a separately authenticated desktop agent; do not mount arbitrary customer directories into a shared production API container.
+- The server-side repository scanner is disabled in production because untrusted Git repositories can trigger Git helper/filter execution. Monitoring a customer's laptop requires a separately authenticated desktop agent with an explicit repository allowlist; do not mount arbitrary customer directories into a shared production API container.
 - Production operations require external backups, restore drills, centralized error tracking, metrics, and alerting.

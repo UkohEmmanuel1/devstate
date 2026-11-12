@@ -1,18 +1,21 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Activity, Bell, BellRing, Check, CircleAlert, Code2, Command, GitBranch, Github, LayoutDashboard, Moon, Play, RefreshCw, Search, ShieldCheck, Smartphone, Square, Terminal, X } from "lucide-react";
 
 const API = "/api/backend";
 type Project = {id:number;name:string;path:string;branch:string|null;dirty_paths:string[];commit:string|null};
 type Event = {id:number;source:string;title:string;message:string;priority:number;created_at:string};
 export default function Dashboard(){
+ const { user } = useUser();
+ const router = useRouter();
  const [projects,setProjects]=useState<Project[]>([]),[events,setEvents]=useState<Event[]>([]);
  const [connected,setConnected]=useState(false),[phoneReady,setPhoneReady]=useState(false),[focus,setFocus]=useState(false),[ntfyTopic,setNtfyTopic]=useState("");
  const [search,setSearch]=useState(""),[notice,setNotice]=useState(""),[phoneOpen,setPhoneOpen]=useState(false),[busy,setBusy]=useState(false);
- const request=useCallback(async(path:string,init?:RequestInit)=>{const r=await fetch(API+path,{...init,headers:{"Content-Type":"application/json",...(init?.headers||{})},cache:"no-store"});if(!r.ok){const body=await r.json().catch(()=>({}));if(r.status===401){window.location.assign("/sign-in");throw new Error("Your session has expired.");}throw new Error(body.detail||"DevState API request failed");}return r.json();},[]);
+ const request=useCallback(async(path:string,init?:RequestInit)=>{const r=await fetch(API+path,{...init,headers:{"Content-Type":"application/json",...(init?.headers||{})},cache:"no-store"});if(!r.ok){const body=await r.json().catch(()=>({}));if(r.status===401){router.replace("/sign-in");throw new Error("Your session has expired.");}throw new Error(body.detail||"DevState API request failed");}return r.json();},[router]);
  const refresh=useCallback(async()=>{try{const values=await Promise.all([request("/projects/"),request("/events/"),request("/focus/"),request("/health/"),request("/notifications/config/")]);setProjects(values[0]);setEvents(values[1]);setFocus(Boolean(values[2].active));setPhoneReady(Boolean(values[4].configured));setNtfyTopic(values[4].topic||"");setConnected(true);}catch{setConnected(false);}},[request]);
- useEffect(()=>{void refresh();const timer=window.setInterval(()=>void refresh(),15000);return()=>window.clearInterval(timer);},[refresh]);
+ useEffect(()=>{const initial=window.setTimeout(()=>void refresh(),0);const timer=window.setInterval(()=>void refresh(),15000);return()=>{window.clearTimeout(initial);window.clearInterval(timer);};},[refresh]);
  async function act(path:string){setBusy(true);try{const result=await request(path,{method:"POST"});setNotice(path.includes("notifications")?(result.accepted_by_ntfy?"Test notification accepted. Check your phone.":"Notification sent."):"DevState updated.");await refresh();}catch(e){setNotice(e instanceof Error?e.message:"Action failed");}finally{setBusy(false);}}
  const visible=useMemo(()=>projects.filter(p=>(p.name+" "+p.path+" "+p.branch).toLowerCase().includes(search.toLowerCase())),[projects,search]);
  const urgent=events.filter(e=>e.priority<=1).length;

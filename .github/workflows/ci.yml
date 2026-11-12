@@ -37,8 +37,8 @@ jobs:
       CORS_ALLOWED_ORIGINS: http://localhost:3000
       CSRF_TRUSTED_ORIGINS: http://localhost:3000
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -86,14 +86,14 @@ jobs:
       CLERK_SECRET_KEY: sk_test_ci_placeholder
       DEVSTATE_API_URL: http://127.0.0.1:8000/api/
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
       - name: Install frontend dependencies
         run: npm install
       - name: Audit frontend dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=moderate
       - name: Run frontend authentication regression tests
         run: npm run test:auth
       - name: Lint frontend

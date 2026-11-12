@@ -2,7 +2,7 @@
 
 ## Runtime components
 
-- **Next.js frontend** (`frontend/`): public landing page, Clerk sign-in/sign-up, protected dashboard and infrastructure screens. The browser calls only the same-origin `/api/backend/*` route.
+- **Next.js 16 frontend** (`frontend/`): public landing page, Clerk sign-in/sign-up, protected dashboard and infrastructure screens. `proxy.ts` performs early route protection; server layouts repeat the authorization check. The browser calls only the same-origin `/api/backend/*` route.
 - **Next.js API proxy** (`frontend/src/app/api/backend/[...path]/route.ts`): requires a Clerk session, obtains a session token server-side, validates path containment, caps request bodies and forwards the bearer token to the private Django API.
 - **Clerk**: identity provider and session issuer. It is not the application's data store.
 - **Django REST Framework** (`backend/`): validates Clerk RS256 JWTs against cached JWKS, maps verified `sub` values to local users, enforces per-user querysets and contains business logic.
@@ -15,7 +15,7 @@
 ## Request flow
 
 1. A user signs in through Clerk.
-2. Next.js middleware protects application routes.
+2. Next.js `proxy.ts` protects application routes, and protected server layouts enforce access again at the data-rendering boundary.
 3. Client-side dashboard requests go to the same-origin backend proxy.
 4. The proxy obtains the current Clerk session token on the server and forwards it as a Bearer token.
 5. Django resolves a signing key from cached Clerk JWKS and validates algorithm, signature, issuer, time claims, subject, optional audience and configured authorized party.
@@ -38,7 +38,7 @@
 
 Django is the system of record. The `check_renewals` management command is scheduled once daily by the deployment platform. A database-backed `RenewalNotice` row serializes concurrent attempts and records retry state. Notification delivery is at-least-once if the process crashes after ntfy accepts a message but before the row is marked sent.
 
-Repository scanning currently inspects only configured directories mounted into the backend container. It is not a way to access a customer's laptop. A separately authenticated desktop agent with an explicit repository allowlist is required for customer-device monitoring.
+Repository scanning is enabled only in local DEBUG mode and is disabled in production because untrusted Git repositories can trigger configured Git helpers/filters. A separately authenticated desktop agent with an explicit repository allowlist is required for customer-device monitoring.
 
 ## Legacy Python package
 

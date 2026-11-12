@@ -1,3 +1,37 @@
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
-export default function LandingPage(){return <main className="grid min-h-screen place-items-center bg-[#0b1018] px-6 text-slate-100"><section className="max-w-2xl text-center"><p className="font-mono text-xs tracking-[.25em] text-blue-300">DEVSTATE · ENGINEERING COMMAND CENTER</p><h1 className="mt-6 text-5xl font-bold tracking-tight">Your engineering work, in one state.</h1><p className="mt-5 text-slate-400">Monitor repositories, focus sessions, infrastructure, domains and AI subscriptions from one secure workspace.</p><SignedIn><Link className="mt-8 inline-block rounded-lg bg-blue-400 px-6 py-3 font-semibold text-slate-950" href="/dashboard">Open dashboard</Link></SignedIn><SignedOut><SignInButton mode="redirect"><button className="mt-8 rounded-lg bg-blue-400 px-6 py-3 font-semibold text-slate-950">Sign in to DevState</button></SignInButton></SignedOut></section></main>}
+import { auth } from "@clerk/nextjs/server";
+
+export default async function LandingPage() {
+  const { userId } = await auth();
+
+  return (
+    <main className="grid min-h-screen place-items-center bg-[#0b1018] px-6 text-slate-100">
+      <section className="max-w-2xl text-center">
+        <p className="font-mono text-xs tracking-[.25em] text-blue-300">
+          DEVSTATE · ENGINEERING COMMAND CENTER
+        </p>
+        <h1 className="mt-6 text-5xl font-bold tracking-tight">
+          Your engineering work, in one state.
+        </h1>
+        <p className="mt-5 text-slate-400">
+          Monitor repositories, focus sessions, infrastructure, domains and AI subscriptions from one secure workspace.
+        </p>
+        {userId ? (
+          <Link
+            className="mt-8 inline-block rounded-lg bg-blue-400 px-6 py-3 font-semibold text-slate-950"
+            href="/dashboard"
+          >
+            Open dashboard
+          </Link>
+        ) : (
+          <Link
+            className="mt-8 inline-block rounded-lg bg-blue-400 px-6 py-3 font-semibold text-slate-950"
+            href="/sign-in"
+          >
+            Sign in to DevState
+          </Link>
+        )}
+      </section>
+    </main>
+  );
+}

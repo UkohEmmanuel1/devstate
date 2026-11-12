@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { ArrowLeft, Globe2, Server, Bot, RefreshCw, Plus, Activity, CalendarClock } from "lucide-react";
 
@@ -12,14 +13,15 @@ type Sub = {id:number;provider:string;plan_name:string;price:string|null;currenc
 type Renewal = {kind:string;id:number;name:string;renews_at:string;days_remaining:number;due:boolean};
 
 export default function InfrastructurePage(){
+ const router = useRouter();
  const [domains,setDomains]=useState<Domain[]>([]),[hosts,setHosts]=useState<Host[]>([]),[subs,setSubs]=useState<Sub[]>([]),[renewals,setRenewals]=useState<Renewal[]>([]);
  const [message,setMessage]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState<"domains"|"hosting"|"ai">("domains");
  const [domain,setDomain]=useState({domain_name:"",registrar:"",expires_at:"",expected_a:""});
  const [host,setHost]=useState({name:"",provider:"",service_url:"",renewal_at:""});
  const [sub,setSub]=useState({provider:"",plan_name:"",price:"",currency:"USD",billing_cycle:"monthly",renews_at:"",management_url:""});
- const req=useCallback(async(path:string,init?:RequestInit)=>{const res=await fetch(API+path,{...init,headers:{"Content-Type":"application/json",...(init?.headers||{})},cache:"no-store"});if(!res.ok){const data=await res.json().catch(()=>({}));if(res.status===401){window.location.assign("/sign-in");throw new Error("Your session has expired.");}throw new Error(data.detail||"Request failed");}return res.json();},[]);
+ const req=useCallback(async(path:string,init?:RequestInit)=>{const res=await fetch(API+path,{...init,headers:{"Content-Type":"application/json",...(init?.headers||{})},cache:"no-store"});if(!res.ok){const data=await res.json().catch(()=>({}));if(res.status===401){router.replace("/sign-in");throw new Error("Your session has expired.");}throw new Error(data.detail||"Request failed");}return res.json();},[router]);
  const refresh=useCallback(async()=>{try{const [d,h,s,r]=await Promise.all([req("/domains/"),req("/hosting/"),req("/ai-subscriptions/"),req("/renewals/")]);setDomains(d);setHosts(h);setSubs(s);setRenewals(r);}catch(e){setMessage(e instanceof Error?e.message:"Could not load infrastructure data");}},[req]);
- useEffect(()=>{void refresh();},[refresh]);
+ useEffect(()=>{const timer=window.setTimeout(()=>void refresh(),0);return()=>window.clearTimeout(timer);},[refresh]);
  async function submit(path:string,data:unknown){setBusy(true);try{await req(path,{method:"POST",body:JSON.stringify(data)});setMessage("Saved successfully.");await refresh();}catch(e){setMessage(e instanceof Error?e.message:"Save failed");}finally{setBusy(false);}}
  async function runCheck(){setBusy(true);try{await req("/infrastructure/check/",{method:"POST"});setMessage("Infrastructure checks completed.");await refresh();}catch(e){setMessage(e instanceof Error?e.message:"Check failed");}finally{setBusy(false);}}
  const field="w-full rounded-lg border border-[#2b394a] bg-[#0c131c] px-3 py-2 text-xs text-slate-100 outline-none focus:border-blue-400";

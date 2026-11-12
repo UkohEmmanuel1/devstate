@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 import jwt
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework.test import APITestCase
@@ -74,6 +75,7 @@ class HostingTargetSafetyTests(APITestCase):
         resolver.return_value = [(2, 1, 6, "", ("127.0.0.1", 80))]
         self.assertFalse(is_public_http_target("http://localhost"))
 
+    @override_settings(DEBUG=True)
     @patch("core.views.socket.getaddrinfo")
     def test_public_ip_target_is_allowed(self, resolver):
         resolver.return_value = [(2, 1, 6, "", ("8.8.8.8", 443))]

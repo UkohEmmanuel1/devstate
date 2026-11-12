@@ -284,7 +284,7 @@ def _git_output(repo_path, *args):
         "GIT_TERMINAL_PROMPT": "0",
     })
     result = subprocess.run(
-        ["git", *args],
+        ["git", "-c", "core.fsmonitor=false", "-c", f"core.hooksPath={os.devnull}", *args],
         cwd=str(repo_path),
         env=env,
         text=True,
@@ -299,6 +299,16 @@ def _git_output(repo_path, *args):
 @api_view(["POST"])
 @throttle_classes([ProjectScanRateThrottle])
 def scan_projects(request):
+    if not settings.DEBUG:
+        return Response(
+            {
+                "detail": (
+                    "Server-side repository scanning is disabled in production. "
+                    "Use the authenticated DevState Desktop Agent when available."
+                )
+            },
+            status=409,
+        )
     roots = _scan_roots_for_user(request.user)
     found = []
     for root in roots:
@@ -319,6 +329,14 @@ def scan_projects(request):
                 path.relative_to(root)
                 git_dir = path / ".git"
                 if not git_dir.exists() or git_dir.is_symlink():
+                    continue
+                if git_dir.is_file():
+                    pointer = git_dir.read_text(encoding="utf-8")[:1024].strip()
+                    if not pointer.startswith("gitdir:"):
+                        continue
+                    linked_git_dir = (path / pointer.split(":", 1)[1].strip()).resolve(strict=True)
+                    linked_git_dir.relative_to(root)
+                elif not git_dir.is_dir():
                     continue
                 dirty = _git_output(path, "status", "--porcelain")
                 obj, _ = Project.objects.update_or_create(

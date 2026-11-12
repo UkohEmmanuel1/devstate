@@ -17,7 +17,15 @@ async function proxy(
     return NextResponse.json({ detail: "Authentication required" }, { status: 401 });
   }
 
-  const token = await getToken();
+  let token: string | null;
+  try {
+    token = await getToken();
+  } catch {
+    return NextResponse.json(
+      { detail: "Authentication provider is temporarily unavailable" },
+      { status: 503 },
+    );
+  }
   if (!token) {
     return NextResponse.json({ detail: "Clerk session token unavailable" }, { status: 401 });
   }
@@ -55,6 +63,10 @@ async function proxy(
 
   let body: ArrayBuffer | undefined;
   if (!["GET", "HEAD"].includes(req.method)) {
+    const declaredLength = Number(req.headers.get("content-length") || 0);
+    if (declaredLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ detail: "Request body is too large" }, { status: 413 });
+    }
     body = await req.arrayBuffer();
     if (body.byteLength > MAX_BODY_BYTES) {
       return NextResponse.json({ detail: "Request body is too large" }, { status: 413 });
