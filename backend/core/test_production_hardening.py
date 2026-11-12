@@ -92,6 +92,7 @@ class ScannerPathIsolationTests(TestCase):
             base.mkdir()
             outside = Path(temporary) / "outside"
             outside.mkdir()
+            base.mkdir()
             (base / "42").symlink_to(outside, target_is_directory=True)
             with patch.dict(
                 os.environ,
