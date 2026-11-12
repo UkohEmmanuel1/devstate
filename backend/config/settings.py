@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "core",
 ]
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
+    "django.middleware.security.SecurityMiddleware",\n    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -69,7 +69,7 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Africa/Lagos"
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = "static/"
+STATIC_URL = "static/"\nSTATIC_ROOT = BASE_DIR / "staticfiles"\nSTORAGES = {\n    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},\n    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},\n}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = [
