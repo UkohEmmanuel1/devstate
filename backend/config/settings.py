@@ -158,12 +158,14 @@ if SENTRY_DSN:
     from sentry_sdk.integrations.django import DjangoIntegration
 
     def scrub_sentry_event(event, hint):
-        request = event.get("request", {})
-        headers = request.get("headers", {})
-        for header in list(headers):
-            if header.lower() in {"authorization", "cookie", "set-cookie", "x-api-key"}:
-                headers[header] = "[Filtered]"
-        request.pop("data", None)
+        request = event.get("request")
+        if isinstance(request, dict):
+            headers = request.get("headers")
+            if isinstance(headers, dict):
+                for header in list(headers):
+                    if header.lower() in {"authorization", "cookie", "set-cookie", "x-api-key"}:
+                        headers[header] = "[Filtered]"
+            request.pop("data", None)
         return event
 
     sentry_sdk.init(
