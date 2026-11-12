@@ -170,7 +170,7 @@ class ReadinessEndpointTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["database"], "ok")
 
-    @override_settings(DEBUG=False)
+    @override_settings(DEBUG=True)
     def test_git_worktree_pointer_cannot_escape_account_root(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary) / "accounts"
@@ -193,3 +193,13 @@ class ReadinessEndpointTests(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data["scanned"], 0)
             self.assertFalse(Project.objects.exists())
+
+    @override_settings(DEBUG=False)
+    def test_production_repository_scan_is_disabled_until_desktop_agent_exists(self):
+        user = get_user_model().objects.create_user(username="production-scan-owner")
+        client = APIClient()
+        client.force_authenticate(user)
+        with patch("core.views._scan_roots_for_user") as roots:
+            response = client.post("/api/projects/scan/", {}, format="json")
+        self.assertEqual(response.status_code, 409)
+        roots.assert_not_called()
