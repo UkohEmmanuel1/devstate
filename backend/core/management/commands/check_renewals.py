@@ -63,7 +63,7 @@ class Command(BaseCommand):
                     or getattr(item, "domain_name", None)
                     or item.name
                 )
-                title = f"{label} renewal: {name}"
+                title = f"{label} renewal: {name}"[:160]
                 message = (
                     f"{name} is due in {max(0, int(days_remaining))} day(s), "
                     f"on {timezone.localtime(renewal_at).strftime('%Y-%m-%d %H:%M %Z')}."
