@@ -17,7 +17,15 @@ async function proxy(
     return NextResponse.json({ detail: "Authentication required" }, { status: 401 });
   }
 
-  const token = await getToken();
+  let token: string | null;
+  try {
+    token = await getToken();
+  } catch {
+    return NextResponse.json(
+      { detail: "Authentication provider is temporarily unavailable" },
+      { status: 503 },
+    );
+  }
   if (!token) {
     return NextResponse.json({ detail: "Clerk session token unavailable" }, { status: 401 });
   }
