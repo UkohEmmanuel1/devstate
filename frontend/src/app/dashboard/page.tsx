@@ -1,20 +1,11 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { UserButton } from "@clerk/nextjs";
-import { Activity, Bell, BellRing, Check, CircleAlert, Clock3, Code2, Command, GitBranch, Github, LayoutDashboard, Moon, Play, RefreshCw, Search, ShieldCheck, Smartphone, Square, Terminal, X } from "lucide-react";
+import { Activity, Bell, BellRing, Check, CircleAlert, Code2, Command, GitBranch, Github, LayoutDashboard, Moon, Play, RefreshCw, Search, ShieldCheck, Smartphone, Square, X } from "lucide-react";
 
 const API = "/api/backend";
 type Project = {id:number;name:string;path:string;branch:string|null;dirty_paths:string[];commit:string|null};
 type Event = {id:number;source:string;title:string;message:string;priority:number;created_at:string};
-const demoProjects:Project[] = [
-{id:1,name:"zigma_backend",path:"~/Projects/zigma_backend",branch:"develop",dirty_paths:["apps/wallet/services.py"],commit:"a82f9c1"},
-{id:2,name:"XStakUp",path:"~/Projects/XStakUp",branch:"feature/payment-webhooks",dirty_paths:[],commit:"4b2d91a"},
-{id:3,name:"Digidrops",path:"~/Projects/Digidrops",branch:"main",dirty_paths:["src/components/DropCard.tsx"],commit:"e13a0f7"},
-{id:4,name:"Nexus",path:"~/Projects/Nexus",branch:"main",dirty_paths:[],commit:"c7b61e2"}];
-const demoEvents:Event[] = [
-{id:1,source:"github-actions",title:"CI pipeline passed",message:"Build and test workflow completed successfully.",priority:2,created_at:new Date().toISOString()},
-{id:2,source:"system",title:"Engineering block ready",message:"Start a focus session when you are ready.",priority:1,created_at:new Date().toISOString()}];
-
 export default function Dashboard(){
  const [projects,setProjects]=useState<Project[]>([]),[events,setEvents]=useState<Event[]>([]);
  const [connected,setConnected]=useState(false),[phoneReady,setPhoneReady]=useState(false),[focus,setFocus]=useState(false),[ntfyTopic,setNtfyTopic]=useState("");
