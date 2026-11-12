@@ -23,7 +23,7 @@ class ClerkAuthenticationTests(APITestCase):
     @patch("core.authentication.jwks_client")
     def test_valid_token_creates_local_user(self, client_factory):
         client_factory.return_value.get_signing_key_from_jwt.return_value = Mock(key="public-key")
-        with patch("core.authentication.jwt.decode", return_value={"sub": "user_clerk_test", "iss": "https://issuer/", "exp": 9999999999}):
+        with patch("core.authentication.jwt.decode", return_value={"sub": "user_clerk_test", "iss": "https://issuer/", "azp": "http://localhost:3000", "exp": 9999999999}):
             response = self.client.get("/api/projects/", HTTP_AUTHORIZATION="Bearer valid")
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ClerkProfile.objects.filter(clerk_user_id="user_clerk_test").exists())

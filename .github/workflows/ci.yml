@@ -1,56 +1,102 @@
 name: CI
+
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "fix/**"]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
+
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: devstate
+          POSTGRES_USER: devstate
+          POSTGRES_PASSWORD: ci-password-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U devstate -d devstate"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-a-production-secret
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgresql://devstate:ci-password-only@127.0.0.1:5432/devstate
+      CLERK_ISSUER: https://example.clerk.accounts.dev
+      CLERK_JWKS_URL: https://example.clerk.accounts.dev/.well-known/jwks.json
+      CLERK_AUTHORIZED_PARTIES: http://localhost:3000
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      CSRF_TRUSTED_ORIGINS: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r backend/requirements.txt
-      - run: python backend/manage.py check
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Django system checks
+        run: python backend/manage.py check
+      - name: Production deployment checks
+        run: python backend/manage.py check --deploy
         env:
-          DJANGO_SECRET_KEY: ci-only-not-a-production-secret
-          DJANGO_DEBUG: "true"
+          DJANGO_SECRET_KEY: ci-production-check-key-that-is-long-enough-for-django-security-checks-1234567890
+          DJANGO_DEBUG: "false"
+          DJANGO_ALLOWED_HOSTS: api.example.com
+          DATABASE_URL: postgresql://devstate:ci-password-only@127.0.0.1:5432/devstate
           CLERK_ISSUER: https://example.clerk.accounts.dev
           CLERK_JWKS_URL: https://example.clerk.accounts.dev/.well-known/jwks.json
-      - run: python backend/manage.py makemigrations --check --dry-run
-        env:
-          DJANGO_SECRET_KEY: ci-only-not-a-production-secret
-          DJANGO_DEBUG: "true"
-          CLERK_ISSUER: https://example.clerk.accounts.dev
-          CLERK_JWKS_URL: https://example.clerk.accounts.dev/.well-known/jwks.json
-      - run: python backend/manage.py migrate --noinput
-        env:
-          DJANGO_SECRET_KEY: ci-only-not-a-production-secret
-          DJANGO_DEBUG: "true"
-          CLERK_ISSUER: https://example.clerk.accounts.dev
-          CLERK_JWKS_URL: https://example.clerk.accounts.dev/.well-known/jwks.json
-      - run: python backend/manage.py test core.test_security
-        env:
-          DJANGO_SECRET_KEY: ci-only-not-a-production-secret
-          DJANGO_DEBUG: "true"
-          CLERK_ISSUER: https://example.clerk.accounts.dev
-          CLERK_JWKS_URL: https://example.clerk.accounts.dev/.well-known/jwks.json
+          CORS_ALLOWED_ORIGINS: https://app.example.com
+          CSRF_TRUSTED_ORIGINS: https://app.example.com
+          SECURE_SSL_REDIRECT: "true"
+          SECURE_HSTS_SECONDS: "31536000"
+      - name: Verify migration files match models
+        run: python backend/manage.py makemigrations --check --dry-run
+      - name: Apply migrations on PostgreSQL
+        run: python backend/manage.py migrate --noinput
+      - name: Run authentication, isolation and hardening tests
+        run: >-
+          python backend/manage.py test
+          core.test_clerk_auth
+          core.test_security
+          core.test_production_hardening
+          core.tests
+      - name: Audit Python dependencies
+        run: |
+          pip install pip-audit
+          pip-audit -r backend/requirements.txt
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
+    env:
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZGV2c3RhdGUuY2xlcmsuYWNjb3VudHMuZGV2JA
+      CLERK_SECRET_KEY: sk_test_ci_placeholder
+      DEVSTATE_API_URL: http://127.0.0.1:8000/api/
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-      - run: npm install
-      - run: npm run lint
-      - run: npm run build
-        env:
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZGV2c3RhdGUuY2xlcmsuYWNjb3VudHMuZGV2JA
-          CLERK_SECRET_KEY: sk_test_ci_placeholder
-          DEVSTATE_API_URL: http://127.0.0.1:8000/api/
+          node-version: "22"
+      - name: Install frontend dependencies
+        run: npm install
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
+      - name: Run frontend authentication regression tests
+        run: npm run test:auth
+      - name: Lint frontend
+        run: npm run lint
+      - name: Build production frontend
+        run: npm run build
