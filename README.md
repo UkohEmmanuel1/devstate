@@ -1,52 +1,51 @@
 # DevState
 
-A local-first Windows developer workspace companion. The first milestone provides repository snapshots, focus-block controls, event routing, a local API, and optional phone push notifications.
+DevState is a local-first developer workspace companion. The current stack is **Next.js + TypeScript** for the dashboard and **Django + Django REST Framework** for the API.
 
-## Phone notifications (ntfy)
+## Architecture
 
-1. Install **ntfy** on Android or iOS.
-2. Create a long, unguessable topic (24+ random characters) and subscribe to it in the app.
-3. Copy `.env.example` to `.env`; set `DEVSTATE_NTFY_TOPIC` to that exact topic.
-4. Optionally configure an authenticated self-hosted ntfy server and token.
-5. Run DevState and use `POST /notifications/test` to send a test.
+- `frontend/` — Next.js App Router, TypeScript, Tailwind CSS and Lucide icons.
+- `backend/` — Django, Django REST Framework, SQLite and ntfy phone push notifications.
+- Dashboard polls the local Django API every 15 seconds and exposes repository, focus-session, event and recovery-snapshot controls.
 
-A topic on public ntfy.sh is protected only by obscurity. Anyone who learns it may read or publish to it. Use a private authenticated server for sensitive use. Notification bodies intentionally contain only event summaries; do not send secrets or source code.
-
-## Windows quick start
+## Run the Django backend (PowerShell)
 
 ```powershell
+cd backend
 py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
+.venv\\Scripts\\Activate.ps1
+pip install -r requirements.txt
 Copy-Item .env.example .env
-# Edit .env: set DEVSTATE_PROJECTS_DIRS and phone notification topic
-devstate
+python manage.py migrate
+python manage.py runserver 127.0.0.1:8000
 ```
 
-Open http://127.0.0.1:8765/docs
-
-## Current scope
-
-- Discover Git repositories one level below configured project roots.
-- Capture branch, HEAD commit and dirty/untracked paths.
-- Persist snapshots/events in SQLite and write Markdown recovery notes.
-- Start/end a focus block and route P0/P1 alerts to phone.
-- Provide local FastAPI endpoints for future desktop UI and watcher integrations.
-
-This initial version does not silently change Windows DND, kill apps, execute shell commands, commit/push/reset repositories, or run background watchers. Those require explicit, separately tested adapters.
-
-## Dashboard frontend
-
-The responsive local dashboard is in `frontend/`.
+## Run the Next.js dashboard (second terminal)
 
 ```powershell
 cd frontend
 npm install
+Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 while the backend is running. See [Dashboard setup](docs/DASHBOARD.md) for details.
+Open http://127.0.0.1:3000. See `backend/README.md` for API configuration and `docs/DASHBOARD.md` for frontend setup.
 
-## Configuration
+## Phone notifications
 
-See `.env.example`. Keep the API bound to localhost. Keep `.env` private.
+Install ntfy on Android or iOS. Subscribe to a private, unpredictable topic and set `DEVSTATE_NTFY_TOPIC` in `backend/.env`. Optionally configure `DEVSTATE_NTFY_TOKEN` for an authenticated ntfy server. Restart Django and use the dashboard's **Send phone test** action.
+
+A public ntfy.sh topic is only protected by secrecy of its name. Anyone who learns the topic can potentially read or publish messages. Do not send secrets, credentials or source code in notifications.
+
+## API routes
+
+- `GET /api/health/`
+- `GET /api/projects/` and `POST /api/projects/scan/`
+- `GET /api/events/` and `POST /api/events/create/`
+- `GET /api/focus/`, `POST /api/focus/start/`, `POST /api/focus/end/`
+- `POST /api/notifications/test/`
+- `POST /api/snapshots/`
+
+## Current implementation boundary
+
+This is an initial application foundation. The repository scanner checks configured roots and their immediate child directories. GitHub CI webhooks, Google Calendar, Windows focus/DND integration, background watchers and the full desktop agent are future milestones. Keep Django bound to localhost while the API has no authentication configured.
