@@ -4,7 +4,13 @@ import django.db.models.deletion
 
 def assign_legacy(apps, schema_editor):
     User=apps.get_model(*settings.AUTH_USER_MODEL.split("."))
-    user,_=User.objects.using(schema_editor.connection.alias).get_or_create(username="legacy-unassigned",defaults={"is_active":False})
+    base="devstate-legacy-unassigned"
+    username=base
+    suffix=0
+    while User.objects.using(schema_editor.connection.alias).filter(username=username).exists():
+        suffix+=1
+        username=f"{base}-{suffix}"
+    user=User.objects.using(schema_editor.connection.alias).create(username=username,is_active=False)
     for name in ["Project","DevEvent","FocusSession","DomainAsset","HostingService","AISubscription"]:
         apps.get_model("core",name).objects.using(schema_editor.connection.alias).filter(owner__isnull=True).update(owner_id=user.pk)
 
