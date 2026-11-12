@@ -65,13 +65,16 @@ Visit `http://localhost:3000`. The landing page is public; dashboard and app rou
 
 ## Docker Compose
 
-A local Compose stack is provided for the frontend, Django API and PostgreSQL. Create `backend/.env` and `frontend/.env.local` from their examples, set real Clerk development values, and configure `DATABASE_URL` to point to the Compose database service. Start with:
+A local Compose stack is provided for the frontend, Django API and PostgreSQL. Create `backend/.env` and `frontend/.env.local` from their examples. Create a root `.env` containing `POSTGRES_PASSWORD` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`; keep it untracked. Configure real Clerk development values in the two service env files.
 
-```bash
-docker compose up --build
+```powershell
+$env:POSTGRES_PASSWORD = "replace-with-a-local-database-password"
+$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_your_clerk_publishable_key"
+docker compose up --build -d
+docker compose exec api python manage.py migrate
 ```
 
-The Django API is internal to the Compose network; the Next.js application is exposed on port 3000. This stack is a development/self-hosting starting point, not a substitute for managed production secrets, object storage, egress controls, backups or TLS termination.
+The Django API is internal to the Compose network; the Next.js application is exposed on port 3000. This Compose file intentionally runs Django in DEBUG mode for local development. Do not expose this configuration directly to the public internet or treat it as a hardened production deployment. Production requires managed secrets, private object storage, an enforced egress proxy, backups and TLS termination.
 
 ## Production deployment
 
