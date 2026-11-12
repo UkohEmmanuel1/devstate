@@ -4,7 +4,7 @@ DevState is an authenticated, cloud-ready and self-hostable engineering workspac
 
 ## Architecture
 
-- `frontend/`: Next.js App Router, Clerk and a same-origin authenticated API proxy.
+- `frontend/`: Next.js 16 App Router, Clerk 7 and a same-origin authenticated API proxy using the Next.js `proxy.ts` convention.
 - `backend/`: Django, DRF, Clerk JWT/JWKS verification, owner-scoped models, rate limits and ntfy notifications.
 - `src/devstate/`: legacy standalone Python event router/SQLite package; it is not the Django web runtime or system of record.
 - PostgreSQL via `DATABASE_URL` in production; SQLite is supported for local development.
