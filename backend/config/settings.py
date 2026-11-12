@@ -107,6 +107,10 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": os.getenv("API_ANON_RATE", "20/min"),
         "user": os.getenv("API_USER_RATE", "300/min"),
+        "project_scan": os.getenv("API_PROJECT_SCAN_RATE", "6/min"),
+        "snapshots": os.getenv("API_SNAPSHOT_RATE", "5/hour"),
+        "notifications": os.getenv("API_NOTIFICATION_RATE", "5/min"),
+        "infrastructure_checks": os.getenv("API_INFRASTRUCTURE_CHECK_RATE", "10/min"),
     },
 }
 
