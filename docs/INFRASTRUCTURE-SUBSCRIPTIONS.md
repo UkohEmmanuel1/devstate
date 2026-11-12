@@ -1,6 +1,6 @@
 # Infrastructure and subscription tracking
 
-DevState can now store and inspect domains, hosting services and AI subscriptions.
+DevState stores and inspects domains, hosting services and AI subscriptions.
 
 ## API
 
@@ -12,11 +12,22 @@ DevState can now store and inspect domains, hosting services and AI subscription
 - `GET /api/renewals/` lists upcoming domain, hosting and AI subscription renewal dates.
 - `POST /api/infrastructure/check/` checks all saved domain A records and hosting URLs.
 
+## Renewal notifications
+
+AI subscription renewal dates/prices are entered manually. Run this command daily to create priority events and send ntfy push notifications for upcoming renewals:
+
+```powershell
+cd backend
+python manage.py check_renewals
+```
+
+For automatic daily execution on Windows, create a Task Scheduler task that runs `python.exe` with argument `manage.py check_renewals`, and set its working directory to the repository's `backend` folder. Use the Python executable inside `.venv\\Scripts\\python.exe`. The command logs at most one alert per asset per local calendar day.
+
 ## What the checks mean
 
-DNS checks verify that a domain resolves to IPv4 addresses and can flag a mismatch against expected A records. This first version does not yet inspect MX, TXT, CNAME, NS or DNSSEC records. Hosting checks verify HTTP reachability and record the response status; they do not inspect provider-side billing, deployment state or resource usage.
+DNS checks currently verify IPv4 A-record resolution and can flag mismatches against configured expected A records. MX, TXT, CNAME, NS and DNSSEC checks are not implemented yet. Hosting checks verify HTTP reachability and record the response status; they do not inspect provider-side billing, deployment state or resource usage.
 
-AI subscription renewal dates and prices are user-entered. Providers generally do not expose a universal API for reading a person's subscription and billing data, so DevState does not claim to discover account billing automatically.
+Domain expiration and AI/hosting renewal dates are currently supplied by the user. Automatic registrar/RDAP expiry discovery and provider billing integrations are future work. Most AI providers do not expose a universal API for reading a person's billing subscription.
 
 ## Apply migrations
 
