@@ -93,7 +93,7 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
       - name: Audit frontend dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=moderate
       - name: Run frontend authentication regression tests
         run: npm run test:auth
       - name: Lint frontend
