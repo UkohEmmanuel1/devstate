@@ -59,7 +59,10 @@ def notification_test(request):
     except httpx.HTTPError:return Response({"detail":"Notification provider request failed."},status=502)
 @api_view(["POST"])
 def scan_projects(request):
-    configured=[p.strip() for p in os.getenv("DEVSTATE_PROJECTS_DIRS","").split(";") if p.strip()]\n    if not settings.DEBUG and any("{user_id}" not in p for p in configured):\n        return Response({"detail":"Production project scan roots must be user-specific and include the {user_id} placeholder."},status=409)\n    roots=[Path(p.replace("{user_id}",str(request.user.pk))).expanduser() for p in configured];found=[]
+    configured=[p.strip() for p in os.getenv("DEVSTATE_PROJECTS_DIRS","").split(";") if p.strip()]
+    if not settings.DEBUG and any("{user_id}" not in p for p in configured):
+        return Response({"detail":"Production project scan roots must be user-specific and include the {user_id} placeholder."},status=409)
+    roots=[Path(p.replace("{user_id}",str(request.user.pk))).expanduser() for p in configured];found=[]
     for root in roots:
         if not root.is_dir():continue
         for path in [root,*[p for p in root.iterdir() if p.is_dir()]]:
