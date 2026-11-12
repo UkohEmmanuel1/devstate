@@ -121,5 +121,5 @@ See `docs/OPERATIONS.md` for release, PostgreSQL backup, restore-drill, schedule
 - DNS monitoring currently checks IPv4 A records only; MX, TXT, CNAME, NS and DNSSEC are not implemented.
 - Renewal dates are user-managed; automatic registrar/RDAP and provider billing integrations are not implemented.
 - Renewal notification delivery is at-least-once across process crashes: a crash after ntfy accepts a message but before the ledger is marked sent can cause a retry.
-- The server-side repository scanner can inspect only filesystems mounted into the backend. Monitoring a customer's laptop requires a separately authenticated desktop agent; do not mount arbitrary customer directories into a shared production API container.
+- The server-side repository scanner is disabled in production because untrusted Git repositories can trigger Git helper/filter execution. Monitoring a customer's laptop requires a separately authenticated desktop agent with an explicit repository allowlist; do not mount arbitrary customer directories into a shared production API container.
 - Production operations require external backups, restore drills, centralized error tracking, metrics, and alerting.
