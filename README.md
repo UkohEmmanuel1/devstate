@@ -15,7 +15,7 @@ DevState is an authenticated, cloud-ready and self-hostable engineering workspac
 4. Set authorized parties to exact frontend origins.
 
 ## Environment
-Frontend: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `DEVSTATE_API_URL`. Backend: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL`, `CLERK_ISSUER`, `CLERK_JWKS_URL`, optional `CLERK_AUDIENCE`, `CLERK_AUTHORIZED_PARTIES`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, and ntfy settings. See both env examples.
+Frontend: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, server-only `CLERK_SECRET_KEY`, `DEVSTATE_API_URL`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL` and `NEXT_PUBLIC_CLERK_SIGN_UP_URL`. Backend: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL`, `CLERK_ISSUER`, `CLERK_JWKS_URL`, optional `CLERK_AUDIENCE`, `CLERK_AUTHORIZED_PARTIES`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `SECURE_SSL_REDIRECT`, `SECURE_HSTS_SECONDS` and ntfy settings. See both env examples. Never prefix or expose `CLERK_SECRET_KEY` as a `NEXT_PUBLIC_` variable.
 
 ## Local development (PowerShell)
 ```powershell
@@ -40,7 +40,7 @@ Visit `http://localhost:3000`; the public landing page links to `/dashboard`.
 
 ## Production deployment
 1. Provision PostgreSQL and set `DATABASE_URL`.
-2. Set `DJANGO_DEBUG=false`, strong Django secret, exact `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS` and HTTPS `CSRF_TRUSTED_ORIGINS`.
+2. Set `DJANGO_DEBUG=false`, a strong Django secret, exact `DJANGO_ALLOWED_HOSTS`, explicit `CORS_ALLOWED_ORIGINS`, HTTPS `CSRF_TRUSTED_ORIGINS`, `SECURE_SSL_REDIRECT=true` and an appropriate `SECURE_HSTS_SECONDS` after confirming the HTTPS proxy is correct.
 3. Set Clerk production keys, issuer/JWKS URL and exact authorized parties.
 4. Set frontend `DEVSTATE_API_URL` to the private backend URL. Prefer exposing only Next.js publicly.
 5. Run `python manage.py migrate` and `python manage.py check --deploy`; serve Django behind a correctly configured HTTPS reverse proxy.
@@ -54,3 +54,6 @@ Back up the database before deployment. Migration `0003_user_ownership` assigns 
 
 ## Infrastructure and subscriptions
 Domain assets, DNS checks, hosting checks, AI subscriptions, renewal summaries and the `check_renewals` management command from `feature/infrastructure-subscriptions` are preserved and user-scoped. See `docs/INFRASTRUCTURE-SUBSCRIPTIONS.md`.
+
+## Verification
+Run `python manage.py test core.test_clerk_auth core.test_security core.tests` from `backend/` after installing backend requirements. Run `npm run test:auth`, `npm run lint` and `npm run build` from `frontend/`. GitHub Actions runs the migration drift check, migrations, backend auth/ownership tests, frontend route-protection checks, lint and production build on pull requests to `main`.
