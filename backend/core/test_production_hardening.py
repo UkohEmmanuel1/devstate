@@ -161,3 +161,10 @@ class RenewalIdempotencyTests(TestCase):
             ):
                 user = type("User", (), {"pk": 42})()
                 self.assertEqual(_scan_roots_for_user(user), [])
+
+
+class ReadinessEndpointTests(TestCase):
+    def test_health_endpoint_is_public_and_checks_database(self):
+        response = APIClient().get("/api/health/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["database"], "ok")
