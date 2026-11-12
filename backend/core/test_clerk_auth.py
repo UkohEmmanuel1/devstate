@@ -46,7 +46,8 @@ class ClerkJWTTestMixin:
         now = timezone.now()
         claims = {
             "sub": subject,
-            "iss": "https://example.clerk.accounts.dev",\n            "azp": "http://localhost:3000",
+            "iss": "https://example.clerk.accounts.dev",
+            "azp": "http://localhost:3000",
             "iat": int(now.timestamp()),
             "nbf": int((now - timedelta(seconds=5)).timestamp()),
             "exp": int((now + timedelta(minutes=5)).timestamp()),
