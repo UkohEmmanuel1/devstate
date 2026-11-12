@@ -153,3 +153,36 @@ class AISubscription(models.Model):
                 fields=["owner", "active", "renews_at"], name="ai_owner_renewal_idx"
             )
         ]
+
+
+class RenewalNotice(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("sending", "Sending"),
+        ("sent", "Sent"),
+    ]
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="renewal_notices",
+    )
+    resource_type = models.CharField(max_length=32)
+    resource_id = models.PositiveBigIntegerField()
+    renewal_at = models.DateTimeField()
+    reminder_date = models.DateField()
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="pending")
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_error = models.CharField(max_length=240, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "resource_type", "resource_id", "renewal_at", "reminder_date"],
+                name="uniq_daily_renewal_notice",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["status", "updated_at"], name="renewal_status_updated_idx")
+        ]
