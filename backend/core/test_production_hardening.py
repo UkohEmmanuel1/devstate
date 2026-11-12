@@ -16,6 +16,7 @@ from core.models import (
     DevEvent,
     FocusSession,
     RenewalNotice,
+    Project,
 )
 from core.views import _scan_roots_for_user, is_public_http_target
 
