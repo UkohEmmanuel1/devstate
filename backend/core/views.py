@@ -37,7 +37,13 @@ from .models import (
     HostingService,
     Project,
 )
-from .throttling import (\n    InfrastructureCheckRateThrottle,\n    NotificationRateThrottle,\n    ProjectScanRateThrottle,\n    SnapshotRateThrottle,\n)\nfrom .serializers import (
+from .throttling import (
+    InfrastructureCheckRateThrottle,
+    NotificationRateThrottle,
+    ProjectScanRateThrottle,
+    SnapshotRateThrottle,
+)
+from .serializers import (
     AISubscriptionSerializer,
     DomainAssetSerializer,
     EventSerializer,
@@ -215,7 +221,9 @@ def focus_end(request):
     return Response({"active": False, "ended_at": now})
 
 
-@api_view(["POST"])\n@throttle_classes([NotificationRateThrottle])\ndef notification_test(request):
+@api_view(["POST"])
+@throttle_classes([NotificationRateThrottle])
+def notification_test(request):
     if not user_topic(request.user):
         return Response(
             {"detail": "Phone notifications are not configured."}, status=409
@@ -288,7 +296,9 @@ def _git_output(repo_path, *args):
     return result.stdout.strip()
 
 
-@api_view(["POST"])\n@throttle_classes([ProjectScanRateThrottle])\ndef scan_projects(request):
+@api_view(["POST"])
+@throttle_classes([ProjectScanRateThrottle])
+def scan_projects(request):
     roots = _scan_roots_for_user(request.user)
     found = []
     for root in roots:
@@ -336,7 +346,9 @@ def _git_output(repo_path, *args):
     )
 
 
-@api_view(["POST"])\n@throttle_classes([SnapshotRateThrottle])\ndef snapshots(request):
+@api_view(["POST"])
+@throttle_classes([SnapshotRateThrottle])
+def snapshots(request):
     """Store private recovery exports in S3-compatible object storage in production."""
     records = ProjectSerializer(
         Project.objects.filter(owner=request.user), many=True
@@ -496,7 +508,9 @@ def renewals(request):
     return Response(sorted(items, key=lambda item: item["days_remaining"]))
 
 
-@api_view(["POST"])\n@throttle_classes([InfrastructureCheckRateThrottle])\ndef check_infrastructure(request):
+@api_view(["POST"])
+@throttle_classes([InfrastructureCheckRateThrottle])
+def check_infrastructure(request):
     domains = []
     hosts = []
     domain_queryset = DomainAsset.objects.filter(owner=request.user).order_by("pk")
