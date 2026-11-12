@@ -16,3 +16,10 @@ build/
 node_modules/
 .next/
 *.pem
+backend/staticfiles/
+private-backups/
+*.dump
+*.sql
+.coverage
+coverage/
+*.log
