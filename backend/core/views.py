@@ -241,13 +241,20 @@ def _scan_roots_for_user(user):
             template.replace("{user_id}", str(user.pk))
         ).expanduser()
         try:
-            resolved = expanded.resolve(strict=True)
-            if not resolved.is_dir():
-                continue
             if not settings.DEBUG:
                 base_text = template.split("{user_id}", 1)[0]
                 base = Path(base_text).expanduser().resolve(strict=True)
-                resolved.relative_to(base)
+                account_root = base / str(user.pk)
+                # Refuse account-root symlinks, including links to another
+                # account's directory that would otherwise remain under base.
+                if account_root.is_symlink() or not account_root.is_dir():
+                    continue
+                resolved = expanded.resolve(strict=True)
+                resolved.relative_to(account_root.resolve(strict=True))
+            else:
+                resolved = expanded.resolve(strict=True)
+            if not resolved.is_dir():
+                continue
             roots.append(resolved)
         except (OSError, ValueError):
             continue
