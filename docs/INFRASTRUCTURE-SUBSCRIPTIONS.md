@@ -15,7 +15,7 @@ DevState tracks domain assets, DNS state, hosting services and AI subscriptions 
 Schedule `python manage.py check_renewals` daily. The command creates owner-scoped events and sends to per-account HMAC-derived ntfy topics. Configure `DEVSTATE_NTFY_TOPIC_PREFIX` and a high-entropy `DEVSTATE_NTFY_TOPIC_SECRET`; optional server auth token is `DEVSTATE_NTFY_TOKEN`. Public ntfy topics are bearer capabilities: never publish topic names or include credentials/secrets in messages.
 
 ## Check limitations
-DNS currently verifies IPv4 A records. MX, TXT, CNAME, NS and DNSSEC are not implemented. Hosting checks verify HTTP reachability, not provider billing or deployment state. Expiry and renewal dates are entered manually; automatic registrar/RDAP and provider billing integrations remain future work.
+DNS currently verifies IPv4 A records. MX, TXT, CNAME, NS and DNSSEC are not implemented. Hosting checks verify HTTP reachability, not provider billing or deployment state. Server-side checks reject non-HTTP(S), loopback, private, link-local and other non-global resolved targets, and do not follow redirects, to reduce SSRF exposure. Expiry and renewal dates are entered manually; automatic registrar/RDAP and provider billing integrations remain future work.
 
 ## Migration
 Back up the database and run `python manage.py migrate`. Existing records are assigned to an inactive legacy account to preserve them without exposing them to new users. Any reassignment requires an explicit, audited administrative action.
