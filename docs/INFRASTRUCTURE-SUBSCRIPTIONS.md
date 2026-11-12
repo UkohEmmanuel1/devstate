@@ -3,6 +3,7 @@
 DevState tracks domain assets, DNS state, hosting services and AI subscriptions inside each authenticated account. Every list/detail/update/delete operation is owner-scoped; another account's object ID returns 404.
 
 ## API
+
 - `GET/POST /api/domains/`, `GET/PATCH/DELETE /api/domains/{id}/`
 - `POST /api/domains/{id}/check_dns/` checks IPv4 A-record resolution.
 - `GET/POST /api/hosting/`, `GET/PATCH/DELETE /api/hosting/{id}/`
@@ -12,10 +13,21 @@ DevState tracks domain assets, DNS state, hosting services and AI subscriptions 
 - `POST /api/infrastructure/check/` checks only the authenticated account's domains and hosting URLs.
 
 ## Renewal notifications
-Schedule `python manage.py check_renewals` daily. The command creates owner-scoped events and sends to per-account HMAC-derived ntfy topics. Configure `DEVSTATE_NTFY_TOPIC_PREFIX` and a high-entropy `DEVSTATE_NTFY_TOPIC_SECRET`; optional server auth token is `DEVSTATE_NTFY_TOKEN`. Public ntfy topics are bearer capabilities: never publish topic names or include credentials/secrets in messages.
 
-## Check limitations
-DNS currently verifies IPv4 A records. MX, TXT, CNAME, NS and DNSSEC are not implemented. Hosting checks verify HTTP reachability, not provider billing or deployment state. Server-side checks reject non-HTTP(S), loopback, private, link-local and other non-global resolved targets, and do not follow redirects, to reduce SSRF exposure. Because the HTTP client resolves the hostname again when connecting, DNS rebinding is still a residual risk; production deployments should also enforce outbound network egress rules or a controlled monitoring proxy. Expiry and renewal dates are entered manually; automatic registrar/RDAP and provider billing integrations remain future work.
+Schedule `python manage.py check_renewals` daily. A database-backed `RenewalNotice` ledger uses a unique per-owner/resource/renewal-date/reminder-day key to prevent concurrent duplicate daily sends. Failed or unconfigured deliveries remain pending for retry. A process crash after ntfy accepts a message but before the ledger is marked sent can still cause an at-least-once retry.
+
+Configure `DEVSTATE_NTFY_TOPIC_PREFIX` and a high-entropy `DEVSTATE_NTFY_TOPIC_SECRET`; optional server auth token is `DEVSTATE_NTFY_TOKEN`. Public ntfy topics are bearer capabilities: never publish topic names or include credentials/secrets in messages.
+
+## Monitoring and SSRF controls
+
+DNS currently verifies IPv4 A records. MX, TXT, CNAME, NS and DNSSEC are not implemented. Hosting checks verify HTTP reachability, not provider billing or deployment state. Production checks require `DEVSTATE_EGRESS_PROXY_URL`; the proxy must independently resolve and validate destinations at connection time, block loopback/private/link-local/reserved/cloud-metadata ranges, and prevent redirect-based policy bypass. A preliminary application DNS lookup is defense in depth, not the connection-time security boundary.
+
+Expiry and renewal dates are entered manually; automatic registrar/RDAP and provider billing integrations remain future work.
+
+## Recovery snapshots
+
+Development snapshots may be written to local `DEVSTATE_RECOVERY_DIR`. Production snapshots require a private S3-compatible bucket configured with `DEVSTATE_SNAPSHOT_BUCKET`; objects are stored under `snapshots/{user_id}/` and server-side encrypted. Keep the bucket private, apply lifecycle/retention rules and test restore procedures. The API does not expose public object URLs.
 
 ## Migration
-Back up the database and run `python manage.py migrate`. Existing records are assigned to an inactive legacy account to preserve them without exposing them to new users. Any reassignment requires an explicit, audited administrative action.
+
+Back up the database and run `python manage.py migrate`. Existing records are assigned to an inactive legacy account to preserve them without exposing them to new users. Migrations 0004 and 0005 add data-integrity constraints, indexes and renewal-notification idempotency. Any legacy reassignment requires an explicit, audited administrative action.
