@@ -12,7 +12,7 @@ class ClerkAuthenticationTests(APITestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response["WWW-Authenticate"], "Bearer")
 
-    @patch("core.authentication._client")
+    @patch("core.authentication.jwks_client")
     def test_invalid_token_is_401(self, client_factory):
         client_factory.return_value.get_signing_key_from_jwt.return_value = Mock(key="public-key")
         with patch("core.authentication.jwt.decode", side_effect=jwt.InvalidTokenError("bad signature")):
@@ -20,7 +20,7 @@ class ClerkAuthenticationTests(APITestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response["WWW-Authenticate"], "Bearer")
 
-    @patch("core.authentication._client")
+    @patch("core.authentication.jwks_client")
     def test_valid_token_creates_local_user(self, client_factory):
         client_factory.return_value.get_signing_key_from_jwt.return_value = Mock(key="public-key")
         with patch("core.authentication.jwt.decode", return_value={"sub": "user_clerk_test", "iss": "https://issuer/", "exp": 9999999999}):
