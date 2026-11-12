@@ -216,3 +216,50 @@ class ClerkTenantIsolationTests(ClerkJWTAuthenticationTests):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(DomainAsset.objects.get(pk=response.data["id"]).owner_id, self.user_a.pk)
+
+    def test_user_a_can_list_only_its_own_records_for_every_supported_resource(self):
+        now = timezone.now()
+        Project.objects.create(owner=self.user_a, name="A project", path="/a/project")
+        DevEvent.objects.create(owner=self.user_a, source="test", title="A event")
+        FocusSession.objects.create(
+            owner=self.user_a, started_at=now, ends_at=now + timedelta(hours=1), active=True
+        )
+        DomainAsset.objects.create(owner=self.user_a, domain_name="a.example")
+        HostingService.objects.create(owner=self.user_a, name="A host")
+        AISubscription.objects.create(owner=self.user_a, provider="A AI")
+        token = self.authenticate_a()
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {token}"}
+        expected = [
+            ("/api/projects/", "name", "A project"),
+            ("/api/events/", "title", "A event"),
+            ("/api/domains/", "domain_name", "a.example"),
+            ("/api/hosting/", "name", "A host"),
+            ("/api/ai-subscriptions/", "provider", "A AI"),
+        ]
+        for url, field, value in expected:
+            with self.subTest(url=url):
+                response = self.client.get(url, **headers)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual([item[field] for item in response.data], [value])
+        focus = self.client.get("/api/focus/", **headers)
+        self.assertEqual(focus.status_code, 200)
+        self.assertTrue(focus.data["active"])
+
+    def test_user_a_cannot_end_user_b_focus_session(self):
+        response = self.client.post(
+            "/api/focus/end/",
+            {},
+            format="json",
+            HTTP_AUTHORIZATION=f"Bearer {self.authenticate_a()}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.focus_b.refresh_from_db()
+        self.assertTrue(self.focus_b.active)
+
+    def test_project_and_event_detail_routes_do_not_expose_foreign_records(self):
+        token = self.authenticate_a()
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {token}"}
+        for url in [f"/api/projects/{self.project_b.pk}/", f"/api/events/{self.event_b.pk}/"]:
+            with self.subTest(url=url):
+                response = self.client.get(url, **headers)
+                self.assertIn(response.status_code, (404, 405))
