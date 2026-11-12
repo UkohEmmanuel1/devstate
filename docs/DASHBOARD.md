@@ -1,28 +1,14 @@
-# DevState dashboard
+# DevState frontend
 
-The frontend is a lightweight, responsive dashboard in `frontend/index.html`. It uses vanilla HTML, CSS and JavaScript to keep the local desktop footprint small.
-
-## Run locally
-
-Start the backend in one terminal:
-
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
-Copy-Item .env.example .env
-# Configure DEVSTATE_PROJECTS_DIRS and ntfy settings
-devstate
-```
-
-Start the dashboard in another terminal:
+The dashboard is a Next.js App Router application written in TypeScript. Tailwind CSS 4 provides styling and Lucide React provides icons.
 
 ```powershell
 cd frontend
 npm install
+Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Open http://127.0.0.1:5173. The dashboard polls the local API every 15 seconds. If the API is unavailable it clearly labels its sample data as demo mode.
+Open http://127.0.0.1:3000. Set `NEXT_PUBLIC_DEVSTATE_API` in `.env.local` if Django is not running at `http://127.0.0.1:8000/api`.
 
-Set `VITE_DEVSTATE_API` only if your API uses a different origin. The backend CORS allowlist permits the local Vite origin. Do not expose the unauthenticated API to a public network.
+Run the Django API separately; see `backend/README.md`. The UI uses live Django endpoints when reachable and labels itself Demo mode while using sample data otherwise.
