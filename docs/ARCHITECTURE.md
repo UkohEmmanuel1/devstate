@@ -38,7 +38,7 @@
 
 Django is the system of record. The `check_renewals` management command is scheduled once daily by the deployment platform. A database-backed `RenewalNotice` row serializes concurrent attempts and records retry state. Notification delivery is at-least-once if the process crashes after ntfy accepts a message but before the row is marked sent.
 
-Repository scanning currently inspects only configured directories mounted into the backend container. It is not a way to access a customer's laptop. A separately authenticated desktop agent with an explicit repository allowlist is required for customer-device monitoring.
+Repository scanning is enabled only in local DEBUG mode and is disabled in production because untrusted Git repositories can trigger configured Git helpers/filters. A separately authenticated desktop agent with an explicit repository allowlist is required for customer-device monitoring.
 
 ## Legacy Python package
 
