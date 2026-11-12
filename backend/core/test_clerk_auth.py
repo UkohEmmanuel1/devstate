@@ -26,7 +26,7 @@ from core.models import (
 )
 
 
-class ClerkJWTAuthenticationTests(APITestCase):
+class ClerkJWTTestMixin:
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -59,6 +59,7 @@ class ClerkJWTAuthenticationTests(APITestCase):
             "/api/projects/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
+class ClerkJWTAuthenticationTests(ClerkJWTTestMixin, APITestCase):
     def test_missing_authorization_header_returns_401_with_bearer_challenge(self):
         response = self.client.get("/api/projects/")
         self.assertEqual(response.status_code, 401)
@@ -116,7 +117,7 @@ class ClerkJWTAuthenticationTests(APITestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class ClerkTenantIsolationTests(ClerkJWTAuthenticationTests):
+class ClerkTenantIsolationTests(ClerkJWTTestMixin, APITestCase):
     def setUp(self):
         super().setUp()
         User = get_user_model()
