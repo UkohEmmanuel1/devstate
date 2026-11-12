@@ -408,7 +408,7 @@ class DomainAssetViewSet(OwnedViewSet):
     queryset = DomainAsset.objects.all()
     serializer_class = DomainAssetSerializer
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], throttle_classes=[InfrastructureCheckRateThrottle])
     def check_dns(self, request, pk=None):
         item = self.get_object()
         observed = {}
@@ -436,7 +436,7 @@ class HostingServiceViewSet(OwnedViewSet):
     queryset = HostingService.objects.all()
     serializer_class = HostingServiceSerializer
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], throttle_classes=[InfrastructureCheckRateThrottle])
     def check(self, request, pk=None):
         item = self.get_object()
         if not item.service_url:
