@@ -3,7 +3,6 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from core.models import AISubscription,DomainAsset,HostingService,DevEvent
 from core.views import notify
-
 class Command(BaseCommand):
     help="Notify account owners about upcoming renewals."
     def handle(self,*args,**options):
