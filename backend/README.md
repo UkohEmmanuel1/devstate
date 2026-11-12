@@ -34,7 +34,7 @@ Run migrations as a release step, not concurrently from every web worker. Config
 - Every user-owned queryset is scoped to `request.user`; owner fields are read-only and assigned server-side.
 - The Clerk JWT verifier fails closed when JWKS verification fails. When `CLERK_AUTHORIZED_PARTIES` is configured, the token must contain a matching `azp`.
 - Expensive project scanning, snapshots, notification and infrastructure-check operations have separate user throttles.
-- Production repository scanning rejects symlinked account roots and paths outside the account directory.
+- Server-side repository scanning is disabled outside DEBUG mode until a separately authenticated desktop agent exists. Local scanning rejects symlinked roots, path escapes and external Git worktree metadata.
 - Production hosting checks are disabled unless `DEVSTATE_EGRESS_PROXY_URL` is set. The proxy must enforce destination IP policy at connection time.
 - Production snapshots require `DEVSTATE_SNAPSHOT_BUCKET` and are written to a per-user object prefix with server-side encryption.
 - ntfy topics are HMAC-derived per account. Treat topic names as bearer capabilities and never put secrets in notification content.
