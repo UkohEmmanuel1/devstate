@@ -6,7 +6,7 @@ DevState is a local-first developer workspace companion. The current stack is **
 
 - `frontend/` — Next.js App Router, TypeScript, Tailwind CSS and Lucide icons.
 - `backend/` — Django, Django REST Framework, SQLite and ntfy phone push notifications.
-- Dashboard polls the local Django API every 15 seconds and exposes repository, focus-session, event and recovery-snapshot controls.
+- Dashboard polls the local Django API every 15 seconds and exposes repository, focus-session, event and recovery-snapshot controls. The Infrastructure page tracks domains, hosting endpoints, renewal dates and AI subscriptions.
 
 ## Run the Django backend (PowerShell)
 
@@ -43,6 +43,10 @@ A public ntfy.sh topic is only protected by secrecy of its name. Anyone who lear
 - `GET /api/projects/` and `POST /api/projects/scan/`
 - `GET /api/events/` and `POST /api/events/create/`
 - `GET /api/focus/`, `POST /api/focus/start/`, `POST /api/focus/end/`
+- `GET/POST /api/domains/` and `POST /api/domains/{id}/check_dns/`
+- `GET/POST /api/hosting/` and `POST /api/hosting/{id}/check/`
+- `GET/POST /api/ai-subscriptions/`
+- `GET /api/renewals/` and `POST /api/infrastructure/check/`
 - `POST /api/notifications/test/`
 - `POST /api/snapshots/`
 
