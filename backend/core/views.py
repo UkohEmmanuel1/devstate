@@ -294,7 +294,11 @@ def _git_output(repo_path, *args):
     for root in roots:
         candidates = [root]
         try:
-            candidates.extend(child for child in root.iterdir() if child.is_dir())
+            for child in root.iterdir():
+                if child.is_dir() and not child.is_symlink():
+                    candidates.append(child)
+                    if len(candidates) >= 101:
+                        break
         except OSError:
             continue
         for candidate in candidates:
@@ -495,7 +499,12 @@ def renewals(request):
 @api_view(["POST"])\n@throttle_classes([InfrastructureCheckRateThrottle])\ndef check_infrastructure(request):
     domains = []
     hosts = []
-    for item in DomainAsset.objects.filter(owner=request.user):
+    domain_queryset = DomainAsset.objects.filter(owner=request.user).order_by("pk")
+    host_queryset = HostingService.objects.filter(owner=request.user).exclude(service_url="").order_by("pk")
+    domain_total = domain_queryset.count()
+    host_total = host_queryset.count()
+    max_checks = 25
+    for item in domain_queryset[:max_checks]:
         try:
             addresses = sorted({
                 entry[4][0]
@@ -521,9 +530,7 @@ def renewals(request):
             "observed": item.observed_dns,
         })
 
-    for item in HostingService.objects.filter(
-        owner=request.user
-    ).exclude(service_url=""):
+    for item in host_queryset[:max_checks]:
         try:
             response = request_public_http_target(item.service_url)
             item.last_http_status = response.status_code
@@ -549,4 +556,10 @@ def renewals(request):
         "domains": domains,
         "hosting": hosts,
         "checked_at": timezone.now(),
+        "limit_per_resource": max_checks,
+        "truncated": domain_total > max_checks or host_total > max_checks,
+        "remaining": {
+            "domains": max(0, domain_total - max_checks),
+            "hosting": max(0, host_total - max_checks),
+        },
     })
