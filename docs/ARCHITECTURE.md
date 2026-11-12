@@ -15,7 +15,7 @@
 ## Request flow
 
 1. A user signs in through Clerk.
-2. Next.js middleware protects application routes.
+2. Next.js `proxy.ts` protects application routes, and protected server layouts enforce access again at the data-rendering boundary.
 3. Client-side dashboard requests go to the same-origin backend proxy.
 4. The proxy obtains the current Clerk session token on the server and forwards it as a Bearer token.
 5. Django resolves a signing key from cached Clerk JWKS and validates algorithm, signature, issuer, time claims, subject, optional audience and configured authorized party.
