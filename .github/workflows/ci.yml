@@ -19,6 +19,12 @@ jobs:
           DJANGO_DEBUG: "true"
           CLERK_ISSUER: https://example.clerk.accounts.dev/
           CLERK_JWKS_URL: https://example.clerk.accounts.dev/.well-known/jwks.json
+      - run: python backend/manage.py makemigrations --check --dry-run
+        env:
+          DJANGO_SECRET_KEY: ci-only-not-a-production-secret
+          DJANGO_DEBUG: "true"
+          CLERK_ISSUER: https://example.clerk.accounts.dev/
+          CLERK_JWKS_URL: https://example.clerk.accounts.dev/.well-known/jwks.json
       - run: python backend/manage.py test
         env:
           DJANGO_SECRET_KEY: ci-only-not-a-production-secret
