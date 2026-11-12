@@ -65,3 +65,19 @@ class OwnershipIsolationTests(APITestCase):
         response = self.client.get("/api/focus/")
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.data["active"])
+
+from core.views import is_public_http_target
+
+class HostingTargetSafetyTests(APITestCase):
+    @patch("core.views.socket.getaddrinfo")
+    def test_loopback_target_is_rejected(self, resolver):
+        resolver.return_value = [(2, 1, 6, "", ("127.0.0.1", 80))]
+        self.assertFalse(is_public_http_target("http://localhost"))
+
+    @patch("core.views.socket.getaddrinfo")
+    def test_public_ip_target_is_allowed(self, resolver):
+        resolver.return_value = [(2, 1, 6, "", ("8.8.8.8", 443))]
+        self.assertTrue(is_public_http_target("https://status.example.com"))
+
+    def test_non_http_scheme_is_rejected(self):
+        self.assertFalse(is_public_http_target("file:///etc/passwd"))
