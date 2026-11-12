@@ -2,7 +2,7 @@
 
 ## Runtime components
 
-- **Next.js frontend** (`frontend/`): public landing page, Clerk sign-in/sign-up, protected dashboard and infrastructure screens. The browser calls only the same-origin `/api/backend/*` route.
+- **Next.js 16 frontend** (`frontend/`): public landing page, Clerk sign-in/sign-up, protected dashboard and infrastructure screens. `proxy.ts` performs early route protection; server layouts repeat the authorization check. The browser calls only the same-origin `/api/backend/*` route.
 - **Next.js API proxy** (`frontend/src/app/api/backend/[...path]/route.ts`): requires a Clerk session, obtains a session token server-side, validates path containment, caps request bodies and forwards the bearer token to the private Django API.
 - **Clerk**: identity provider and session issuer. It is not the application's data store.
 - **Django REST Framework** (`backend/`): validates Clerk RS256 JWTs against cached JWKS, maps verified `sub` values to local users, enforces per-user querysets and contains business logic.
