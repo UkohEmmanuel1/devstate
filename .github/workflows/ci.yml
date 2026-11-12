@@ -54,6 +54,7 @@ jobs:
       - name: Run authentication, isolation and hardening tests
         run: >-
           python backend/manage.py test
+          core.test_clerk_auth
           core.test_security
           core.test_production_hardening
           core.tests
