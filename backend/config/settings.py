@@ -130,3 +130,12 @@ SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 if not DEBUG and not SECURE_SSL_REDIRECT:
     raise ImproperlyConfigured("SECURE_SSL_REDIRECT must be enabled outside DEBUG mode.")
+
+# Server-side monitoring must use a controlled proxy in production. The proxy
+# must enforce destination-IP policy at connection time (including redirects).
+DEVSTATE_EGRESS_PROXY_URL = os.getenv("DEVSTATE_EGRESS_PROXY_URL", "")
+
+# Production recovery exports are stored in a private S3-compatible bucket.
+DEVSTATE_SNAPSHOT_BUCKET = os.getenv("DEVSTATE_SNAPSHOT_BUCKET", "")
+DEVSTATE_SNAPSHOT_REGION = os.getenv("DEVSTATE_SNAPSHOT_REGION", "")
+DEVSTATE_SNAPSHOT_ENDPOINT = os.getenv("DEVSTATE_SNAPSHOT_ENDPOINT", "")
