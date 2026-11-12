@@ -1,10 +1,12 @@
 from fastapi import FastAPI,HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .models import EventIn,Priority
 from .service import DevStateService
 
 service=DevStateService(settings)
 app=FastAPI(title="DevState",version="0.1.0",description="Local-first developer workspace orchestrator")
+app.add_middleware(CORSMiddleware,allow_origins=["http://localhost:5173","http://127.0.0.1:5173"],allow_credentials=False,allow_methods=["GET","POST"],allow_headers=["Content-Type"])
 
 @app.get("/health")
 def health():
