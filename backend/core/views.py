@@ -30,6 +30,8 @@ def create_event(request):
  return Response({**EventSerializer(event).data,'phone_notification_sent':sent},status=201)
 @api_view(['GET'])
 def focus(request):
+ now=timezone.now()
+ FocusSession.objects.filter(active=True,ends_at__lte=now).update(active=False,ended_at=now)
  session=FocusSession.objects.filter(active=True).first()
  return Response({'active':bool(session),**(FocusSerializer(session).data if session else {})})
 @api_view(['POST'])
