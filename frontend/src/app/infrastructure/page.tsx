@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 import { ArrowLeft, Globe2, Server, Bot, RefreshCw, Plus, Activity, CalendarClock } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_DEVSTATE_API || "http://127.0.0.1:8000/api";
+const API = "/api/backend";
 type Domain = {id:number;domain_name:string;registrar:string;expires_at:string|null;dns_status:string;observed_dns:Record<string,unknown>};
 type Host = {id:number;name:string;provider:string;service_url:string;renewal_at:string|null;status:string;last_http_status:number|null};
 type Sub = {id:number;provider:string;plan_name:string;price:string|null;currency:string;billing_cycle:string;renews_at:string|null;active:boolean;management_url:string};
@@ -25,7 +26,7 @@ export default function InfrastructurePage(){
  const button="inline-flex items-center gap-2 rounded-lg bg-blue-400 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-50";
  return <main className="min-h-screen bg-[#0b1018] px-5 py-7 text-slate-100 md:px-10">
  <div className="mx-auto max-w-6xl">
- <Link href="/" className="mb-7 inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white"><ArrowLeft size={14}/>Back to command center</Link>
+ <div className="mb-7 flex items-center justify-between"><Link href="/dashboard" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white"><ArrowLeft size={14}/>Back to command center</Link><UserButton/></div>
  <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[.2em] text-blue-300">ASSET & BILLING CONTROL</p><h1 className="mt-2 text-3xl font-bold">Infrastructure</h1><p className="mt-2 text-xs text-slate-400">Keep domains, hosting and AI renewals visible in one place.</p></div><button className={button} disabled={busy} onClick={()=>void runCheck()}><Activity size={14}/>Run checks</button></div>
  <div className="mt-7 grid gap-3 sm:grid-cols-3">{[{label:"Domains",value:domains.length,icon:<Globe2/>},{label:"Hosting services",value:hosts.length,icon:<Server/>},{label:"AI subscriptions",value:subs.filter(x=>x.active).length,icon:<Bot/>}].map(x=><div key={x.label} className="rounded-xl border border-[#263343] bg-[#121a25] p-4"><div className="flex justify-between text-xs text-slate-400">{x.label}{x.icon}</div><p className="mt-3 text-2xl font-bold">{x.value}</p></div>)}</div>
  <section className="mt-7 rounded-xl border border-[#263343] bg-[#111923] p-5"><div className="flex items-center gap-2"><CalendarClock size={17} className="text-blue-300"/><h2 className="font-semibold">Upcoming renewals</h2></div>{renewals.length?<div className="mt-3 divide-y divide-[#263343]">{renewals.map(x=><div key={x.kind+x.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-xs"><div><b>{x.name}</b><span className="ml-2 text-slate-500">{x.kind.replace("_"," ")}</span></div><span className={x.due?"text-amber-300":"text-slate-400"}>{x.days_remaining} days · {new Date(x.renews_at).toLocaleDateString()}</span></div>)}</div>:<p className="mt-3 text-xs text-slate-500">No renewal dates recorded yet.</p>}</section>
