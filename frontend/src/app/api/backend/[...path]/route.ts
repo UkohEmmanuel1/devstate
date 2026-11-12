@@ -55,6 +55,10 @@ async function proxy(
 
   let body: ArrayBuffer | undefined;
   if (!["GET", "HEAD"].includes(req.method)) {
+    const declaredLength = Number(req.headers.get("content-length") || 0);
+    if (declaredLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ detail: "Request body is too large" }, { status: 413 });
+    }
     body = await req.arrayBuffer();
     if (body.byteLength > MAX_BODY_BYTES) {
       return NextResponse.json({ detail: "Request body is too large" }, { status: 413 });
