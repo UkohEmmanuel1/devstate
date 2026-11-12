@@ -35,6 +35,18 @@ Open http://127.0.0.1:8765/docs
 
 This initial version does not silently change Windows DND, kill apps, execute shell commands, commit/push/reset repositories, or run background watchers. Those require explicit, separately tested adapters.
 
+## Dashboard frontend
+
+The responsive local dashboard is in `frontend/`.
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://127.0.0.1:5173 while the backend is running. See [Dashboard setup](docs/DASHBOARD.md) for details.
+
 ## Configuration
 
 See `.env.example`. Keep the API bound to localhost. Keep `.env` private.
