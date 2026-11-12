@@ -5,13 +5,16 @@ DevState is an authenticated, cloud-ready and self-hostable engineering workspac
 ## Architecture
 
 - `frontend/`: Next.js App Router, Clerk and a same-origin authenticated API proxy.
-- `backend/`: Django, DRF, Clerk JWT/JWKS verification, owner-scoped models, rate limits and ntfy notifications.\n- `src/devstate/`: legacy standalone Python event router/SQLite package; it is not the Django web runtime or system of record.
+- `backend/`: Django, DRF, Clerk JWT/JWKS verification, owner-scoped models, rate limits and ntfy notifications.
+- `src/devstate/`: legacy standalone Python event router/SQLite package; it is not the Django web runtime or system of record.
 - PostgreSQL via `DATABASE_URL` in production; SQLite is supported for local development.
 - S3-compatible private object storage is required for production recovery snapshots.
 - Production hosting checks require a controlled outbound egress proxy. The proxy must enforce destination-IP policy at connection time.
 - Ownership is derived from the verified Clerk subject, never from request parameters or payloads.
 
-See `docs/ARCHITECTURE.md` for component responsibilities, request flow, trust boundaries and the legacy package boundary.\n\n## Clerk setup
+See `docs/ARCHITECTURE.md` for component responsibilities, request flow, trust boundaries and the legacy package boundary.
+
+## Clerk setup
 
 1. Create a Clerk application and configure sign-in and sign-up routes as `/sign-in` and `/sign-up`.
 2. Put the publishable key and server-only secret key in `frontend/.env.local`. Never expose `CLERK_SECRET_KEY` to browser code.
@@ -34,7 +37,8 @@ Backend:
 - `DEVSTATE_EGRESS_PROXY_URL` for production hosting checks
 - `DEVSTATE_SNAPSHOT_BUCKET`, optional `DEVSTATE_SNAPSHOT_REGION` and `DEVSTATE_SNAPSHOT_ENDPOINT` for private S3-compatible snapshots
 - `DEVSTATE_NTFY_SERVER`, `DEVSTATE_NTFY_TOPIC_PREFIX`, `DEVSTATE_NTFY_TOPIC_SECRET`, optional `DEVSTATE_NTFY_TOKEN`
-- `API_ANON_RATE`, `API_USER_RATE`, `API_PROJECT_SCAN_RATE`, `API_SNAPSHOT_RATE`, `API_NOTIFICATION_RATE`, `API_INFRASTRUCTURE_CHECK_RATE`\n- Optional error tracking: `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_ENVIRONMENT`
+- `API_ANON_RATE`, `API_USER_RATE`, `API_PROJECT_SCAN_RATE`, `API_SNAPSHOT_RATE`, `API_NOTIFICATION_RATE`, `API_INFRASTRUCTURE_CHECK_RATE`
+- Optional error tracking: `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_ENVIRONMENT`
 
 See `frontend/.env.example` and `backend/.env.example`. Never commit `.env`, `.env.local`, credentials or production secrets.
 
@@ -111,7 +115,9 @@ GitHub Actions runs Django checks, migration drift checks, migrations and backen
 
 Domain assets, DNS state, hosting services, AI subscriptions, renewal summaries and the `check_renewals` management command from `feature/infrastructure-subscriptions` are preserved and user-scoped. See `docs/INFRASTRUCTURE-SUBSCRIPTIONS.md`.
 
-See `docs/OPERATIONS.md` for release, PostgreSQL backup, restore-drill, scheduler and incident-response procedures.\n\n## Operational limitations
+See `docs/OPERATIONS.md` for release, PostgreSQL backup, restore-drill, scheduler and incident-response procedures.
+
+## Operational limitations
 
 - Hosting checks establish HTTP reachability, not provider billing or deployment health.
 - DNS monitoring currently checks IPv4 A records only; MX, TXT, CNAME, NS and DNSSEC are not implemented.
