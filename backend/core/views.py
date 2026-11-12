@@ -23,6 +23,7 @@ from rest_framework.decorators import (
     api_view,
     authentication_classes,
     permission_classes,
+    throttle_classes,
 )
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -35,7 +36,7 @@ from .models import (
     HostingService,
     Project,
 )
-from .serializers import (
+from .throttling import (\n    InfrastructureCheckRateThrottle,\n    NotificationRateThrottle,\n    ProjectScanRateThrottle,\n    SnapshotRateThrottle,\n)\nfrom .serializers import (
     AISubscriptionSerializer,
     DomainAssetSerializer,
     EventSerializer,
@@ -207,8 +208,7 @@ def focus_end(request):
     return Response({"active": False, "ended_at": now})
 
 
-@api_view(["POST"])
-def notification_test(request):
+@api_view(["POST"])\n@throttle_classes([NotificationRateThrottle])\ndef notification_test(request):
     if not user_topic(request.user):
         return Response(
             {"detail": "Phone notifications are not configured."}, status=409
@@ -281,8 +281,7 @@ def _git_output(repo_path, *args):
     return result.stdout.strip()
 
 
-@api_view(["POST"])
-def scan_projects(request):
+@api_view(["POST"])\n@throttle_classes([ProjectScanRateThrottle])\ndef scan_projects(request):
     roots = _scan_roots_for_user(request.user)
     found = []
     for root in roots:
@@ -326,8 +325,7 @@ def scan_projects(request):
     )
 
 
-@api_view(["POST"])
-def snapshots(request):
+@api_view(["POST"])\n@throttle_classes([SnapshotRateThrottle])\ndef snapshots(request):
     """Store private recovery exports in S3-compatible object storage in production."""
     records = ProjectSerializer(
         Project.objects.filter(owner=request.user), many=True
@@ -487,8 +485,7 @@ def renewals(request):
     return Response(sorted(items, key=lambda item: item["days_remaining"]))
 
 
-@api_view(["POST"])
-def check_infrastructure(request):
+@api_view(["POST"])\n@throttle_classes([InfrastructureCheckRateThrottle])\ndef check_infrastructure(request):
     domains = []
     hosts = []
     for item in DomainAsset.objects.filter(owner=request.user):
