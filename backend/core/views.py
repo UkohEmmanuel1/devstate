@@ -284,7 +284,7 @@ def _git_output(repo_path, *args):
         "GIT_TERMINAL_PROMPT": "0",
     })
     result = subprocess.run(
-        ["git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null", "-c", "core.pager=cat", *args],
+        ["git", "-c", "core.fsmonitor=false", "-c", f"core.hooksPath={os.devnull}", *args],
         cwd=str(repo_path),
         env=env,
         text=True,
