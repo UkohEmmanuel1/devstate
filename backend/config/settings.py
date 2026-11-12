@@ -18,7 +18,7 @@ LANGUAGE_CODE="en-us";TIME_ZONE="Africa/Lagos";USE_I18N=True;USE_TZ=True
 STATIC_URL="static/";DEFAULT_AUTO_FIELD="django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS=[x.strip() for x in os.getenv("CORS_ALLOWED_ORIGINS","http://localhost:3000").split(",") if x.strip()]
 CSRF_TRUSTED_ORIGINS=[x.strip() for x in os.getenv("CSRF_TRUSTED_ORIGINS","").split(",") if x.strip()]
-CLERK_ISSUER=os.environ["CLERK_ISSUER"].rstrip("/")+"/"
+CLERK_ISSUER=os.environ["CLERK_ISSUER"].rstrip("/")
 CLERK_JWKS_URL=os.environ["CLERK_JWKS_URL"]
 CLERK_AUDIENCE=os.getenv("CLERK_AUDIENCE","")
 CLERK_AUTHORIZED_PARTIES=[x.strip() for x in os.getenv("CLERK_AUTHORIZED_PARTIES","").split(",") if x.strip()]
