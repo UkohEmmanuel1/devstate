@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 import jwt
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework.test import APITestCase
